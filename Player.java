@@ -1,3 +1,6 @@
+import javafx.scene.shape.Rectangle;
+
+
 // Player singleton class
 public class Player {
    // Class instance

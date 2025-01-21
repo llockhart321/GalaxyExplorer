@@ -1,5 +1,7 @@
 import javafx.scene.paint.*;
 import java.util.*;
+import javafx.scene.shape.Rectangle;
+
 public class StarSystem {
    private List <Planet> planets;
    private List <Gate> gates;
@@ -17,5 +19,16 @@ public class StarSystem {
       }
       
       // Fill the gates arraylist
+      
+   
+      
    }
+   
+   public void collisionHandle(){
+   
+   //check if player collides with gate
+   if ()
+   
+   }
+   
 }
