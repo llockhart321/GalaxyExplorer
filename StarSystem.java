@@ -12,6 +12,7 @@ public class StarSystem {
    private ArrayList<Double> starX;
    private ArrayList<Double> starY;
    private ArrayList<Double> starRadius;
+   Planet planet;
 
    public StarSystem() {
       starX = new ArrayList<Double>();
@@ -39,6 +40,9 @@ public class StarSystem {
             starY.add(y);
             starRadius.add(radius);
         }
+        
+        planet = new Planet(Color.BLUE, 500, 30, 10, 100);
+        
       
       // Fill the gates arraylist
    }
@@ -55,6 +59,8 @@ public class StarSystem {
         {
             gc.fillOval(starX.get(i), starY.get(i), starRadius.get(i), starRadius.get(i));
         }
+        
+        planet.drawMe(gc);
         
         // Optionally: Draw planets or gates (if implemented)
         // This example focuses on the starry background.
