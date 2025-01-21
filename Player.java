@@ -15,7 +15,6 @@ public class Player {
    }
    // Private constructor
    private Player() {
-      instance = new Player();
       // Set player off screen
       x = -99;
       y = -99;
