@@ -2,6 +2,10 @@
 import javafx.event.*;
 import javafx.scene.input.*;
 public class KeyListenerDown implements EventHandler<KeyEvent> {
+   private static Player p;
+   public KeyListenerDown() {
+      p = Player.getInstance();
+   }
    public void handle(KeyEvent event) {
       if (event.getCode() == KeyCode.D) {
          // Player right

@@ -1,11 +1,11 @@
 // Player singleton class
 public class Player {
    // Class instance
-   private Player instance;
+   private static Player instance;
    // Coordinates
    private double x, y;
    // Public method to get private instance
-   public Player getInstance() {
+   public static Player getInstance() {
       // Ensure instance is instantiated
       if (instance == null) {
          instance = new Player();
