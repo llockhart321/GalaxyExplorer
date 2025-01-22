@@ -4,11 +4,14 @@ import javafx.scene.shape.Rectangle;
 // Player singleton class
 public class Player {
    // Class instance
-   private Player instance;
+   private static Player instance;
    // Coordinates
    private double x, y;
+   // for collision
+   private static Rectangle bounds = new Rectangle(100, 100, 30, 30); 
+   
    // Public method to get private instance
-   public Player getInstance() {
+   public static Player getInstance() {
       // Ensure instance is instantiated
       if (instance == null) {
          instance = new Player();
@@ -18,10 +21,12 @@ public class Player {
    }
    // Private constructor
    private Player() {
-      instance = new Player();
       // Set player off screen
       x = -99;
       y = -99;
+   }
+   public static Rectangle getBounds(){
+      return bounds;
    }
    // Handle player movements
    public void moveLeftBy(double deltaX) { x += deltaX; }
