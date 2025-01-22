@@ -6,6 +6,8 @@ import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.stage.*;
+import java.util.Random;
+
 
 
 
@@ -14,25 +16,28 @@ public class Gate {
    // Direction variable to say which way the gate will point to using normal circular degrees
    private double direction;
    // Object that the gate leads to
-   private Gate to;
+   private int targetSystem;
    
    // which system the gate is in
    private int systemID;
    
    //location. dteremend from random;
-   private double x=10;
-   private double y=10;
+   private double x, y;
+  
+   private double sizeX = 10;
+   private double sizeY = 50;
+   private Rectangle bounds;
    
-   //bounds / shape of gate
-   Rectangle bounds = new Rectangle(100, 100, 50, 50); // size to be determined :)
-   //bounds.setFill(Color.GRAY);
    
    
    // Constructor for each gate
-   public Gate (double direction, Gate to, double x, double y) {
+   public Gate (double direction, int targetSystem, double x, double y) {
       this.direction = direction;
-      this.to = to;
+      this.targetSystem = targetSystem;
       this.systemID = systemID;
+      this.x = x;
+      this.y = y;
+      this.bounds = new Rectangle(this.x, this.y, sizeX, sizeY);
    }
    
    //get the id of the solar system the gate is in
@@ -45,11 +50,35 @@ public class Gate {
       // Enter drawing code here...
       
       gc.setFill(Color.PURPLE);
-      gc.fillOval(x,y,10,50);
+      gc.fillOval(x,y,sizeX,sizeY);
       
    }
    
    public Rectangle getBounds(){
-      return bounds;
+      return this.bounds;
    }
+   
+   public void activate(GraphicsContext gc){
+   
+       StarSystem newSys;
+   
+      //load new system
+      if (StarSystemCache.get(targetSystem) == null){
+         //create this new system.
+         newSys = new StarSystem(gc, targetSystem);
+         StarSystemCache.add( newSys );
+      }
+      else{
+         newSys = StarSystemCache.get(targetSystem);
+      }
+      Player.getInstance().setSystem(newSys);
+
+   
+      Player player = Player.getInstance();
+      //bring platyer to new spawn point
+      player.setX(0);
+      player.setY(0);
+      
+   }
+   
 }

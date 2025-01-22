@@ -4,7 +4,7 @@ public class PlayerMovementState {
    private double deltaX = 0;
    private double deltaY = 0;
    private double slowRate = 0.0005;
-   private double speed = 0.3;
+   private double speed = 1.0; 
    
    private boolean floatRight = false;
    private boolean floatLeft = false;

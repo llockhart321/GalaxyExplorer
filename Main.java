@@ -25,6 +25,11 @@ public class Main extends Application {
       scene.setOnKeyPressed(new KeyListenerDown());
       scene.setOnKeyReleased(new KeyListenerUp());
       
+      //set player start system
+      StarSystem startSystem = new StarSystem(gc, -1);
+      StarSystemCache.add(startSystem);
+      Player.getInstance().setSystem(startSystem);
+      
       // Set up Animation
       AnimationHandler ah = new AnimationHandler(gc);
       ah.start();

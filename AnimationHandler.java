@@ -10,11 +10,13 @@ public class AnimationHandler extends AnimationTimer {
    
    public AnimationHandler(GraphicsContext gc) { 
       this.gc = gc; 
-      system = new StarSystem();
+     
    }
    public void handle(long currentTimeInNanoSeconds) {
+    system =  Player.getInstance().getSystem();
       gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
       system.drawMe(gc);
+      system.collisionCheck(gc);
       Player.getInstance().drawMe(gc);
       PlayerMovementState.getInstance().move();
    }
