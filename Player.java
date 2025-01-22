@@ -1,5 +1,7 @@
-import javafx.scene.shape.Rectangle;
 
+import javafx.scene.shape.Rectangle;
+import javafx.scene.canvas.*;
+import javafx.scene.paint. *;
 
 // Player singleton class
 public class Player {
@@ -22,20 +24,23 @@ public class Player {
    // Private constructor
    private Player() {
       // Set player off screen
-      x = -99;
-      y = -99;
+      x = 40;
+      y = 40;
    }
    public static Rectangle getBounds(){
       return bounds;
    }
    // Handle player movements
-   public void moveLeftBy(double deltaX) { x += deltaX; }
-   public void moveRightBy(double deltaX) { x -= deltaX; }
-   public void moveDownBy(double deltaY) { y += deltaY; }
-   public void moveUpBy(double deltaY) { y -= deltaY; }
+   public void moveXBy(double deltaX) { x += deltaX; }
+   public void moveYBy(double deltaY) { y += deltaY; }
    // Getters and Setters
    public double getX() { return x; }
    public double getY() { return y; }
    public void setX(double x) { this.x = x; }
    public void setY(double y) { this.y = y; }
+   
+   public void drawMe(GraphicsContext gc) {
+      gc.setFill(Color.LIGHTBLUE);
+      gc.fillOval(x, y, 40, 40);
+   }
 }

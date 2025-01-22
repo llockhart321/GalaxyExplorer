@@ -2,22 +2,22 @@
 import javafx.event.*;
 import javafx.scene.input.*;
 public class KeyListenerDown implements EventHandler<KeyEvent> {
-   private static Player p;
+   private static PlayerMovementState pms;
    public KeyListenerDown() {
-      p = Player.getInstance();
+      pms = PlayerMovementState.getInstance();
    }
    public void handle(KeyEvent event) {
       if (event.getCode() == KeyCode.D) {
-         // Player right
+         pms.moveRight();
       }
       if (event.getCode() == KeyCode.A) {
-         // Player left
+         pms.moveLeft();
       }
       if (event.getCode() == KeyCode.S) {
-         // Player down
+         pms.moveDown();
       }
-      if (event.getCode() == KeyCode.D) {
-         // Player up
+      if (event.getCode() == KeyCode.W) {
+         pms.moveUp();
       }
       if (event.getCode() == KeyCode.M) {
          // Display map
