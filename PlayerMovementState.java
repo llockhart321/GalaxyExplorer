@@ -1,93 +1,69 @@
 public class PlayerMovementState {
-   //Player movement booleans
-   private boolean moveRightActive = false;
-   private boolean moveLeftActive = false;
-   private boolean moveDownActive = false;
-   private boolean moveUpActive = false;
+   private static PlayerMovementState instance;
+
+   private double deltaX = 0;
+   private double deltaY = 0;
+   private double slowRate = 0.0005;
+   private double speed = 0.3;
    
-   private boolean moveRightPassive = false;
-   private boolean moveLeftPassive = false;
-   private boolean moveDownPassive = false;
-   private boolean moveUpPassive = false;
+   private boolean floatRight = false;
+   private boolean floatLeft = false;
+   private boolean floatDown = false;
+   private boolean floatUp = false;
    
-   public void moveRight() {
-      moveRightActive = true;
-      moveLeftActive = false;
-      moveDownActive = false;
-      moveUpActive = false;
-      moveRightPassive = false;
-      moveLeftPassive = false;
-      moveDownPassive = false;
-      moveUpPassive = false;
+   public void moveRight() {deltaX = speed; }
+   public void moveLeft() { deltaX = speed * -1; }
+   public void moveDown() { deltaY = speed; }
+   public void moveUp() { deltaY = speed * -1; }
+   
+   public static PlayerMovementState getInstance() {
+      if (instance == null) {
+         instance = new PlayerMovementState();
+      }
+      return instance;
    }
-   public void moveLeft() {
-      moveRightActive = false;
-      moveLeftActive = true;
-      moveDownActive = false;
-      moveUpActive = false;
-      moveRightPassive = false;
-      moveLeftPassive = false;
-      moveDownPassive = false;
-      moveUpPassive = false;
-   }
-   public void moveDown() {
-      moveRightActive = false;
-      moveLeftActive = false;
-      moveDownActive = true;
-      moveUpActive = false;
-      moveRightPassive = false;
-      moveLeftPassive = false;
-      moveDownPassive = false;
-      moveUpPassive = false;
-   }
-   public void moveUp() {
-      moveRightActive = false;
-      moveLeftActive = false;
-      moveDownActive = false;
-      moveUpActive = true;
-      moveRightPassive = false;
-      moveLeftPassive = false;
-      moveDownPassive = false;
-      moveUpPassive = false;
-   }
-   public void floatRight() {
-      moveRightActive = false;
-      moveLeftActive = false;
-      moveDownActive = false;
-      moveUpActive = false;
-      moveRightPassive = true;
-      moveLeftPassive = false;
-      moveDownPassive = false;
-      moveUpPassive = false;
-   }
-   public void floatLeft() {
-      moveRightActive = false;
-      moveLeftActive = false;
-      moveDownActive = false;
-      moveUpActive = false;
-      moveRightPassive = false;
-      moveLeftPassive = true;
-      moveDownPassive = false;
-      moveUpPassive = false;
-   }
-   public void floatDown() {
-      moveRightActive = false;
-      moveLeftActive = false;
-      moveDownActive = false;
-      moveUpActive = false;
-      moveRightPassive = false;
-      moveLeftPassive = false;
-      moveDownPassive = true;
-      moveUpPassive = false;
-   }
-   public void floatUp() {
-      moveRightActive = false;
-      moveLeftActive = false;
-      moveDownActive = false;
-      moveUpActive = false;
-      moveRightPassive = false;
-      moveLeftPassive = false;
-      moveDownPassive = false;
-      moveUpPassive = true;
+   
+   public void stopRight() { floatRight = true; }
+   public void stopLeft() { floatLeft = true; }
+   public void stopDown() { floatDown = true; }
+   public void stopUp() { floatUp = true; }
+   
+   public void move() {
+      if (floatRight) {
+         floatLeft = false;
+         if (deltaX >= 0) {
+            deltaX -= slowRate;
+         } else {
+            deltaX = 0;
+            floatRight = false;
+         }
+      } else if (floatLeft) {
+         floatRight = false;
+         if (deltaX <= 0) {
+            deltaX += slowRate;
+         } else {
+            deltaX = 0;
+            floatLeft = false;
+         }
+      }
+      if (floatDown) {
+         floatUp = false;
+         if (deltaY >= 0) {
+            deltaY -= slowRate;
+         } else {
+            deltaY = 0;
+            floatDown = false;
+         }
+      } else if (floatUp) {
+         floatDown = false;
+         if (deltaY <= 0) {
+            deltaY += slowRate;
+         } else {
+            deltaY = 0;
+            floatUp = false;
+         }
+      }
+      Player.getInstance().moveXBy(deltaX);
+      Player.getInstance().moveYBy(deltaY);
    }
 }

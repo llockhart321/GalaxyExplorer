@@ -14,9 +14,8 @@ public class AnimationHandler extends AnimationTimer {
    }
    public void handle(long currentTimeInNanoSeconds) {
       gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-      gc.setFill(Color.WHITE);
-      gc.fillRect(x, 50, 50, 50);
-      x++;
       system.drawMe(gc);
+      Player.getInstance().drawMe(gc);
+      PlayerMovementState.getInstance().move();
    }
 }
