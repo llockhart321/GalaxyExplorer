@@ -18,6 +18,7 @@ public class StarSystem {
    GraphicsContext gc;
    private int ID;
    private static int idCounter = 0;
+   private StarSystemNebula nebula;
 
    public StarSystem(GraphicsContext gc, int potentialID) {
       if(potentialID == -1){     
@@ -42,6 +43,7 @@ public class StarSystem {
       
       planets = new ArrayList<>();
       gates = new ArrayList<>();
+      nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) {
          planets.add(new Planet(Color.BLUE, 0, 0, 0, 0));
@@ -94,8 +96,13 @@ public class StarSystem {
         // Set the background to black
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, 1000,1000);
+        
+        
+        //draw nebula
+        nebula.setOffset(Player.getInstance().getX(), Player.getInstance().getY());
+        nebula.draw(gc);
+        
         gc.setFill(Color.WHITE);
-
         for(int i=0; i<starX.size(); i++)
         {
             gc.fillOval(starX.get(i), starY.get(i), starRadius.get(i), starRadius.get(i));
@@ -108,6 +115,7 @@ public class StarSystem {
         for (int i = 0; i<gates.size(); i++){
             gates.get(i).drawMe(gc);
         }
+        
         
 
         planet.drawMe(gc);
