@@ -46,11 +46,11 @@ public class Gate {
    }
    
    // Method to draw the gate using the direciton variable
-   public void drawMe(GraphicsContext gc) {
+   public void drawMe(GraphicsContext gc, double offsetX, double offsetY) {
       // Enter drawing code here...
       
       gc.setFill(Color.PURPLE);
-      gc.fillOval(x,y,sizeX,sizeY);
+      gc.fillOval(x - offsetX,y - offsetY,sizeX,sizeY);
       
    }
    

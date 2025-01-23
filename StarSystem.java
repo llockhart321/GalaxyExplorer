@@ -141,7 +141,7 @@ public class StarSystem {
         
         // draw gates
         for (int i = 0; i<gates.size(); i++){
-            gates.get(i).drawMe(gc);
+            gates.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
         }
         
         

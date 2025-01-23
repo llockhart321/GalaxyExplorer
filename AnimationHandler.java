@@ -23,6 +23,6 @@ public class AnimationHandler extends AnimationTimer {
       // PlayerMovementState will check if the player has moved
       PlayerMovementState.getInstance().move();
       // Camera will check if the camera needs to pan based on the Player's position
-      Camera.getInstance().checkPlayerPosition(Player.getInstance().getX(), Player.getInstance().getY());
+      Camera.getInstance().checkPlayerPosition();
    }
 }
