@@ -127,13 +127,13 @@ public class StarSystem {
         
         
         //draw nebula
-        nebula.setOffset(Player.getInstance().getX() + cameraOffsetX, Player.getInstance().getY() + cameraOffsetY);
+        nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
         nebula.draw(gc);
         
         gc.setFill(Color.WHITE);
         for(int i=0; i<starX.size(); i++)
         {
-            gc.fillOval(starX.get(i) + cameraOffsetX, starY.get(i) + cameraOffsetY, starRadius.get(i), starRadius.get(i));
+            gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
         }
         
 

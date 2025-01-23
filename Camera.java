@@ -24,22 +24,15 @@ public class Camera {
    public void checkPlayerPosition(double playerX, double playerY) {
       if (playerX + cameraOffsetX <= 270) {
          System.out.println("Pan left");
-         while (playerX + cameraOffsetX <= 270) {
-         }
       }
       if (playerX + cameraOffsetX >= 530) {
-         while (playerX + cameraOffsetX >= 530) {
-         }
+         System.out.println("Pan right");
       }
       if (playerY + cameraOffsetY <= 150) {
          System.out.println("Pan up");
-         while (playerY + cameraOffsetY <= 150) {
-         }
       }
       if (playerY + cameraOffsetY >= 300) {
          System.out.println("Pan down");
-         while (playerY + cameraOffsetY >= 300) {
-         }
       }
    }
    // Method to reset the camera to 0 when a new level is started
