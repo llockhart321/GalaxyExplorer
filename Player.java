@@ -29,8 +29,8 @@ public class Player {
    // Private constructor
    private Player() {
       // Set player off screen
-      x = 40;
-      y = 40;
+      x = 480;
+      y = 200;
       bounds.setX(x);
       bounds.setY(y);
       

@@ -60,8 +60,8 @@ public class Gate {
    
    public void activate(GraphicsContext gc){
    
-       StarSystem newSys;
-   
+      StarSystem newSys;
+      
       //load new system
       if (StarSystemCache.get(targetSystem) == null){
          //create this new system.
@@ -72,8 +72,8 @@ public class Gate {
          newSys = StarSystemCache.get(targetSystem);
       }
       Player.getInstance().setSystem(newSys);
-
-   
+      // Reset the camera angle
+      Camera.getInstance().reset();
       Player player = Player.getInstance();
       //bring platyer to new spawn point
       player.setX(0);
