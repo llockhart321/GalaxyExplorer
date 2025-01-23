@@ -11,7 +11,7 @@ public class StarSystemNebula {
     private double offsetX = 0;
     private double offsetY = 0;
     private final int GRID_SIZE = 64; // Size of the noise grid
-    private final double SCALE = 115.0; // Scale of the noise
+    private final double SCALE = 120.0; // Scale of the noise
     
     public StarSystemNebula(int width, int height, long seed) {
         this.width = width * 5;  // 5 screens wide
