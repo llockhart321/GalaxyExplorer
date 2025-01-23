@@ -45,8 +45,16 @@ public class StarSystem {
       gates = new ArrayList<>();
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
-      for (int i = 0; i < numPlanets; i++) {
-         planets.add(new Planet(Color.BLUE, 0, 0, 0, 0));
+      for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
+         int minRadius = 10;
+         int maxRadius = 20;
+         int minDistance = 200;
+         int maxDistance = 600; //setting mins and maxes for random parameters for planets 
+         
+         int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius; //getting a random radius and distance for each planet 
+         int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
+         planets.add(new Planet(Color.BLUE, distance, 30, radius, 100));
+         System.out.println("new planet");
       }
       
       //add gates
@@ -67,7 +75,7 @@ public class StarSystem {
             starRadius.add(radius);
         }
         
-        planet = new Planet(Color.BLUE, 500, 30, 10, 100);
+       // planet = new Planet(Color.BLUE, 500, 30, 10, 100);
         
       
       // Fill the gates arraylist
@@ -118,7 +126,11 @@ public class StarSystem {
         
         
 
-        planet.drawMe(gc);
+        //planet.drawMe(gc);
+        
+        for (int i = 0; i < planets.size(); i++) {
+         planets.get(i).drawMe(gc);
+      }
         
         
     }   
