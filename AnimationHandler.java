@@ -13,9 +13,9 @@ public class AnimationHandler extends AnimationTimer {
      
    }
    public void handle(long currentTimeInNanoSeconds) {
-    system =  Player.getInstance().getSystem();
+      system =  Player.getInstance().getSystem();
       gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-      system.drawMe(gc);
+      system.drawMe(gc, 0, 0);
       system.collisionCheck(gc);
       Player.getInstance().drawMe(gc);
       PlayerMovementState.getInstance().move();
