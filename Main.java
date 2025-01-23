@@ -30,8 +30,14 @@ public class Main extends Application {
       StarSystemCache.add(startSystem);
       Player.getInstance().setSystem(startSystem);
       
+      
+      
       // Set up Animation
       AnimationHandler ah = new AnimationHandler(gc);
+      
+      //get map ready
+      GalaxyMap.getInstance().set(gc, ah);
+      
       ah.start();
    
       // Set the scene and display the stage
