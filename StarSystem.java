@@ -2,6 +2,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
+import java.util.Random;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
@@ -50,10 +51,13 @@ public class StarSystem {
          int maxRadius = 20;
          int minDistance = 200;
          int maxDistance = 600; //setting mins and maxes for random parameters for planets 
+       
          
+         Color color = Color.color(Math.random(), Math.random(), Math.random());
+        
          int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius; //getting a random radius and distance for each planet 
          int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
-         planets.add(new Planet(Color.BLUE, distance, 30, radius, 100));
+         planets.add(new Planet(color, distance, 30, radius, 100));
          System.out.println("new planet");
       }
       
