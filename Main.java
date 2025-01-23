@@ -26,7 +26,7 @@ public class Main extends Application {
       scene.setOnKeyReleased(new KeyListenerUp());
       
       //set player start system
-      StarSystem startSystem = new StarSystem(gc, -1);
+      StarSystem startSystem = new StarSystem(gc, -1); 
       StarSystemCache.add(startSystem);
       Player.getInstance().setSystem(startSystem);
       
