@@ -33,7 +33,7 @@ public class Planet {
    }
    
    // Method to draw the planet
-   public void drawMe(GraphicsContext gc) {
+   public void drawMe(GraphicsContext gc, double playerOffsetX, double cameraOffsetY) {
       updatePosition();
       double x = getRelativeX(500) - radius; // Adjust for the planet's radius
       double y = getRelativeY(500) - radius; // Adjust for the planet's radius

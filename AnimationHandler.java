@@ -20,9 +20,9 @@ public class AnimationHandler extends AnimationTimer {
       gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
       system.drawMe(gc);
       system.collisionCheck(gc);
-      // Player draws itself
-      Player.getInstance().drawMe(gc);
       // PlayerMovementState will check if the player has moved
       PlayerMovementState.getInstance().move();
+      // Update camera
+      c.update();
    }
 }

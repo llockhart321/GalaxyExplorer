@@ -29,7 +29,7 @@ public class Asteroid {
         return 200 + distance * Math.sin(position); // Calculate Y coordinate
     }
 
-    public void drawMe(GraphicsContext gc) {
+    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
         updatePosition();
         double x = getRelativeX() - radius; // Adjust for the asteroid's radius
         double y = getRelativeY() - radius; // Adjust for the asteroid's radius

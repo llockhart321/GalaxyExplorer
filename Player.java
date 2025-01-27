@@ -1,5 +1,4 @@
-
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.*;
 import javafx.scene.canvas.*;
 import javafx.scene.paint. *;
 
@@ -30,7 +29,7 @@ public class Player {
    }
    // Private constructor
    private Player() {
-      // Set player off screen
+      // Set player on screen
       x = 480;
       y = 200;
       bounds.setX(x);
@@ -41,11 +40,19 @@ public class Player {
       return bounds;
    }
    // Handle player movements
-   public void moveXBy(double deltaX) { x += deltaX; this.bounds.setX(x);}
-   public void moveYBy(double deltaY) { y += deltaY; this.bounds.setY(y);}
+   public void moveXBy(double deltaX) {
+      x += deltaX;
+      this.bounds.setX(x);
+   }
+   public void moveYBy(double deltaY) {
+      y += deltaY;
+      this.bounds.setY(y);
+   }
    // Getters and Setters
-   public double getX() { return x; }
-   public double getY() { return y; }
+   public double getX() { 
+      return x; }
+   public double getY() { 
+      return y; }
    public void setX(double x) { 
       this.x = x;
       this.bounds.setX(x);
@@ -57,13 +64,18 @@ public class Player {
    // Set and get player movements
    public void setLeftright(int leftright) { this.leftright = leftright; }
    public void setUpdown(int updown) { this.updown = updown; }
-   public boolean isMovingRight() { return leftright == 1; }
-   public boolean isMovingLeft() { return leftright == -1; }
-   public boolean isMovingUp() { return leftright == -1; }
-   public boolean isMovingDown() { return leftright == 1; }
-   public void drawMe(GraphicsContext gc) {
+   public boolean isMovingRight() { 
+      return leftright == 1; }
+   public boolean isMovingLeft() { 
+      return leftright == -1; }
+   public boolean isMovingUp() { 
+      return leftright == -1; }
+   public boolean isMovingDown() { 
+      return leftright == 1; }
+   
+   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
       gc.setFill(Color.LIGHTBLUE);
-      gc.fillOval(x, y, sizeX, sizeY);
+      gc.fillOval(x - cameraOffsetX, y - cameraOffsetY, sizeX, sizeY);
    }
    
    public StarSystem getSystem(){
