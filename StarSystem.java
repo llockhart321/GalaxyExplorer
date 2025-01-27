@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
 import javafx.scene.shape.Rectangle;
+import javafx.geometry.Point2D;
+
 
 
 public class StarSystem {
@@ -73,7 +75,7 @@ public class StarSystem {
          int speed = rand.nextInt(50) + 50; // Random speed between 50 and 100
          double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
       
-         asteroids.add(new Asteroid(asteroidDistance, position, radius, speed));
+         asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
          System.out.println("new asteroid");
       }
       
@@ -118,6 +120,20 @@ public class StarSystem {
 
    public int getID(){
       return this.ID;
+   }
+   
+   public boolean checkMissileCollisions(Point2D missilePos, double missileRadius) {
+       Iterator<Asteroid> iter = asteroids.iterator();
+       while (iter.hasNext()) {
+           Asteroid asteroid = iter.next();
+           if (asteroid.checkMissileCollision(missilePos, missileRadius)) {
+               if (asteroid.isEmpty()) {
+                   iter.remove();
+               }
+               return true;
+           }
+       }
+       return false;
    }
    
    public void drawMe(GraphicsContext gc) {

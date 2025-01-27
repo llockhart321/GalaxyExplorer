@@ -24,6 +24,9 @@ public class Main extends Application {
       // Key Listeners
       scene.setOnKeyPressed(new KeyListenerDown());
       scene.setOnKeyReleased(new KeyListenerUp());
+      scene.setOnMouseClicked(event -> {
+          MissileSystem.getInstance().shoot(event.getX(), event.getY());
+      });
       
       //set player start system
       StarSystem startSystem = new StarSystem(gc, -1); 

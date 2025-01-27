@@ -1,40 +1,165 @@
 import javafx.scene.paint.Color;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.geometry.Point2D;
+import java.util.*;
 
 public class Asteroid {
-    private Color color;
-    private double distance, position;
-    private int radius;
-    private int speed = 100;
+    private List<AsteroidPart> parts;
+    private double centerDistance;
+    private double orbitalPosition;
+    private double orbitalSpeed;
+    private boolean isIntact;
+    private static final double ORBITAL_FORCE = 0.1;
+    private static final double IMPACT_FORCE = 5.0;
 
-    public Asteroid(double distance, double position, int radius, int speed) {
-        this.color = Color.BURLYWOOD; // Asteroids are brown
-        this.distance = distance;
-        this.position = position;
-        this.radius = radius;
+    public Asteroid(double distance, double position, double baseRadius, int speed) {
+        this.centerDistance = distance;
+        this.orbitalPosition = position;
+        this.orbitalSpeed = speed;
+        this.isIntact = true;
+        this.parts = new ArrayList<>();
+        
+        // Create 3-5 overlapping parts
+        Random rand = new Random();
+        int numParts = rand.nextInt(3) + 3;
+        
+        for (int i = 0; i < numParts; i++) {
+            double angle = 2 * Math.PI * i / numParts;
+            double partRadius = baseRadius * (0.6 + rand.nextDouble() * 0.4);
+            double offset = baseRadius * 0.7; // Overlap distance
+            
+            Point2D partPos = new Point2D(
+                Math.cos(angle) * offset,
+                Math.sin(angle) * offset
+            );
+            
+            parts.add(new AsteroidPart(partPos, partRadius, 0));
+        }
+    }
+
+    public boolean checkMissileCollision(Point2D missilePos, double missileRadius) {
+        Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
+        
+        for (Iterator<AsteroidPart> iterator = parts.iterator(); iterator.hasNext();) {
+            AsteroidPart part = iterator.next();
+            Point2D partWorldPos = asteroidCenter.add(part.getPosition());
+            
+            if (partWorldPos.distance(missilePos) < (part.getRadius() + missileRadius)) {
+                // Calculate impact direction
+                Point2D impactDir = partWorldPos.subtract(missilePos).normalize();
+                
+                // Remove the hit part
+                iterator.remove();
+                
+                // If asteroid was intact, apply impact force and disable orbital motion
+                if (isIntact) {
+                    isIntact = false;
+                    for (AsteroidPart remainingPart : parts) {
+                        Point2D partPos = remainingPart.getPosition();
+                        double distance = partPos.distance(part.getPosition());
+                        double forceFactor = 1.0 / (1.0 + distance);
+                        Point2D impulse = impactDir.multiply(IMPACT_FORCE * forceFactor);
+                        remainingPart.setVelocity(remainingPart.getVelocity().add(impulse));
+                    }
+                }
+                
+                // Recalculate groups after impact
+                updateGroups();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateGroups() {
+        if (parts.isEmpty()) return;
+        
+        // Reset all group IDs
+        for (AsteroidPart part : parts) {
+            part.setGroupId(-1);
+        }
+        
+        // Assign new groups using flood fill
+        int currentGroup = 0;
+        for (AsteroidPart part : parts) {
+            if (part.getGroupId() == -1) {
+                assignGroup(part, currentGroup++);
+            }
+        }
+    }
+
+    private void assignGroup(AsteroidPart part, int groupId) {
+        part.setGroupId(groupId);
+        
+        for (AsteroidPart other : parts) {
+            if (other.getGroupId() == -1 && isConnected(part, other)) {
+                assignGroup(other, groupId);
+            }
+        }
+    }
+
+    private boolean isConnected(AsteroidPart part1, AsteroidPart part2) {
+        return part1.getPosition().distance(part2.getPosition()) < 
+               (part1.getRadius() + part2.getRadius()) * 0.8; // 0.8 for overlap threshold
     }
 
     private void updatePosition() {
-        position += Math.toRadians(speed / distance); // Increment position by speed (converted to radians)
-        if (position > 2 * Math.PI) {
-            position -= 2 * Math.PI; // Ensure the position stays within 0 to 2π
+        if (isIntact) {
+            // Update orbital position
+            orbitalPosition += Math.toRadians(orbitalSpeed / centerDistance);
+            if (orbitalPosition > 2 * Math.PI) {
+                orbitalPosition -= 2 * Math.PI;
+            }
+        } else {
+            // Update individual part positions based on velocity
+            for (AsteroidPart part : parts) {
+                Point2D pos = part.getPosition();
+                Point2D vel = part.getVelocity();
+                
+                // Apply a small amount of orbital force if parts are still somewhat close to original orbit
+                Point2D centerDir = new Point2D(-pos.getX(), -pos.getY()).normalize();
+                vel = vel.add(centerDir.multiply(ORBITAL_FORCE));
+                
+                // Update position and velocity
+                pos = pos.add(vel);
+                part.setPosition(pos);
+                part.setVelocity(vel);
+            }
         }
     }
 
     public double getRelativeX() {
-        return 200 + distance * Math.cos(position); // Calculate X coordinate
+        return 400 + centerDistance * Math.cos(orbitalPosition);
     }
 
     public double getRelativeY() {
-        return 200 + distance * Math.sin(position); // Calculate Y coordinate
+        return 225 + centerDistance * Math.sin(orbitalPosition);
     }
 
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
         updatePosition();
-        double x = getRelativeX() - radius; // Adjust for the asteroid's radius
-        double y = getRelativeY() - radius; // Adjust for the asteroid's radius
+        
+        Point2D center = new Point2D(getRelativeX() - cameraOffsetX, getRelativeY() - cameraOffsetY);
+        
+        // Draw each part
+        for (AsteroidPart part : parts) {
+            Point2D partPos = center.add(part.getPosition());
+            
+            // Vary color slightly based on group ID for visualization
+            Color partColor = isIntact ? Color.BURLYWOOD : 
+                Color.hsb(30 + part.getGroupId() * 20, 0.3, 0.6);
+            
+            gc.setFill(partColor);
+            gc.fillOval(
+                partPos.getX() - part.getRadius(),
+                partPos.getY() - part.getRadius(),
+                part.getRadius() * 2,
+                part.getRadius() * 2
+            );
+        }
+    }
 
-        gc.setFill(color); // Set the fill color
-        gc.fillOval(x, y, radius * 2, radius * 2); // Draw the asteroid as a circle
+    public boolean isEmpty() {
+        return parts.isEmpty();
     }
 }
