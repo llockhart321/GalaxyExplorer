@@ -24,15 +24,19 @@ public class Camera {
    public void checkPlayerPosition() {
       if (Player.getInstance().getX() + cameraOffsetX <= 270 && Player.getInstance().isMovingLeft()) {
          System.out.println("Pan left");
+         double playerRelativeX = Player.getInstance().getX() - 270;
       }
       if (Player.getInstance().getX() + cameraOffsetX >= 530 && Player.getInstance().isMovingRight()) {
-         System.out.println("Pan right");         
+         System.out.println("Pan right");
+         double playerRelativeX = Player.getInstance().getX() - 530;
       }
       if (Player.getInstance().getY() + cameraOffsetY <= 150 && Player.getInstance().isMovingUp()) {
          System.out.println("Pan up");
+         double playerRelativeY = Player.getInstance().getY() - 150;
       }
       if (Player.getInstance().getY() + cameraOffsetY >= 300 && Player.getInstance().isMovingDown()) {
          System.out.println("Pan down");
+         double playerRelativeY = Player.getInstance().getY() - 300;
       }
    }
    // Method to reset the camera to 0 when a new level is started

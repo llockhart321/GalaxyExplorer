@@ -38,57 +38,69 @@ public class PlayerMovementState {
    }
    public void stopRight() { 
        movingRight = false; 
-       Player.getInstance().setLeftright(0);
    }
    public void stopLeft() { 
        movingLeft = false;
-       Player.getInstance().setLeftright(0);
    }
    public void stopDown() { 
        movingDown = false; 
-       Player.getInstance().setUpdown(0);
    }
    public void stopUp() { 
        movingUp = false; 
-       Player.getInstance().setUpdown(0);
    }
    public void move() {
       if (movingRight) {
-         if (deltaX < 0) {
+         if (deltaX < 0.5) {
             deltaX = 0;
+            Player.getInstance().setLeftright(0);
          }
          deltaX += slowRate;
       } else if (movingLeft) {
-         if (deltaX > 0) {
+         if (deltaX > -0.5) {
             deltaX = 0;
+            Player.getInstance().setLeftright(0);
          }
          deltaX -= slowRate;
       } else {
          if (deltaX > 0) {
             deltaX -= slowRate;
-            if (deltaX < 0) deltaX = 0;
+            if (deltaX < 0.5) {
+               deltaX = 0;
+               Player.getInstance().setLeftright(0);
+            }
          } else if (deltaX < 0) {
             deltaX += slowRate;
-            if (deltaX > 0) deltaX = 0;
+            if (deltaX > 0.5) {
+               deltaX = 0;
+               Player.getInstance().setLeftright(0);
+            }
          }
       }
       if (movingDown) {
-         if (deltaY < 0) {
+         if (deltaY < 0.5) {
             deltaY = 0;
+            Player.getInstance().setUpdown(0);
          }
          deltaY += slowRate;
       } else if (movingUp) {
-         if (deltaY > 0) {
+         if (deltaY > -0.5) {
             deltaY = 0;
+            Player.getInstance().setUpdown(0);
          }
          deltaY -= slowRate;
       } else {
          if (deltaY > 0) {
             deltaY -= slowRate;
-            if (deltaY < 0) deltaY = 0;
+            if (deltaY < 0.5) {
+               deltaY = 0;
+               Player.getInstance().setUpdown(0);
+            }
          } else if (deltaY < 0) {
             deltaY += slowRate;
-            if (deltaY > 0) deltaY = 0;
+            if (deltaY > -0.5) {
+               deltaY = 0;
+               Player.getInstance().setUpdown(0);
+            }
          }
       }
       Player.getInstance().moveXBy(deltaX);
