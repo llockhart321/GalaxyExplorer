@@ -120,20 +120,20 @@ public class StarSystem {
       return this.ID;
    }
    
-   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
+   public void drawMe(GraphicsContext gc) {
         // Set the background to black
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, 1000,1000);
         
         
         //draw nebula
-        nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
+        nebula.setOffset(Player.getInstance().getX(), Player.getInstance().getY());
         nebula.draw(gc);
         
         gc.setFill(Color.WHITE);
         for(int i=0; i<starX.size(); i++)
         {
-            gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
+            gc.fillOval(starX.get(i), starY.get(i), starRadius.get(i), starRadius.get(i));
         }
         
 
@@ -141,7 +141,7 @@ public class StarSystem {
         
         // draw gates
         for (int i = 0; i<gates.size(); i++){
-            gates.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
+            gates.get(i).drawMe(gc);
         }
         
         

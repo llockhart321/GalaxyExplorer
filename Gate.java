@@ -46,11 +46,11 @@ public class Gate {
    }
    
    // Method to draw the gate using the direciton variable
-   public void drawMe(GraphicsContext gc, double offsetX, double offsetY) {
+   public void drawMe(GraphicsContext gc) {
       // Enter drawing code here...
       
       gc.setFill(Color.PURPLE);
-      gc.fillOval(x - offsetX,y - offsetY,sizeX,sizeY);
+      gc.fillOval(x,y,sizeX,sizeY);
       
    }
    
@@ -72,8 +72,6 @@ public class Gate {
          newSys = StarSystemCache.get(targetSystem);
       }
       Player.getInstance().setSystem(newSys);
-      // Reset the camera angle
-      Camera.getInstance().reset();
       Player player = Player.getInstance();
       //bring platyer to new spawn point
       player.setX(0);
