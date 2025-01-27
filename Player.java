@@ -7,7 +7,6 @@ import javafx.scene.paint. *;
 public class Player {
    // Class instance
    private static Player instance;
-   
    private static StarSystem currentSystem;
    // Coordinates
    private double x, y;
@@ -16,6 +15,9 @@ public class Player {
    private static double sizeY = 40;
    // for collision
    private static Rectangle bounds = new Rectangle(0, 0, sizeX, sizeY);
+   // ints for player movement for Camera
+   private int leftright = 0;
+   private int updown = 0;
    
    // Public method to get private instance
    public static Player getInstance() {
@@ -52,7 +54,13 @@ public class Player {
       this.y = y; 
       this.bounds.setY(y);      
    }
-   
+   // Set and get player movements
+   public void setLeftright(int leftright) { this.leftright = leftright; }
+   public void setUpdown(int updown) { this.updown = updown; }
+   public boolean isMovingRight() { return leftright == 1; }
+   public boolean isMovingLeft() { return leftright == -1; }
+   public boolean isMovingUp() { return leftright == -1; }
+   public boolean isMovingDown() { return leftright == 1; }
    public void drawMe(GraphicsContext gc) {
       gc.setFill(Color.LIGHTBLUE);
       gc.fillOval(x, y, sizeX, sizeY);

@@ -12,21 +12,25 @@ public class PlayerMovementState {
        movingRight = true;
        movingLeft = false;
        deltaX = speed;
+       Player.getInstance().setLeftright(1);
    }
    public void moveLeft() {
        movingLeft = true;
        movingRight = false;
        deltaX = -speed;
+       Player.getInstance().setLeftright(-1);
    }
    public void moveDown() {
        movingDown = true;
        movingUp = false;
        deltaY = speed;
+       Player.getInstance().setUpdown(1);
    }
    public void moveUp() {
        movingUp = true;
        movingDown = false;
        deltaY = -speed;
+       Player.getInstance().setUpdown(-1);
    }
    public static PlayerMovementState getInstance() {
       if (instance == null) { instance = new PlayerMovementState(); }
@@ -34,15 +38,19 @@ public class PlayerMovementState {
    }
    public void stopRight() { 
        movingRight = false; 
+       Player.getInstance().setLeftright(0);
    }
    public void stopLeft() { 
-       movingLeft = false; 
+       movingLeft = false;
+       Player.getInstance().setLeftright(0);
    }
    public void stopDown() { 
        movingDown = false; 
+       Player.getInstance().setUpdown(0);
    }
    public void stopUp() { 
        movingUp = false; 
+       Player.getInstance().setUpdown(0);
    }
    public void move() {
       if (movingRight) {

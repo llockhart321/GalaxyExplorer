@@ -22,18 +22,16 @@ public class Camera {
    public double getCameraOffsetY() { return cameraOffsetY; }
    // Method called every tick to check if the camera needs to pan from last tick
    public void checkPlayerPosition() {
-      if (Player.getInstance().getX() + cameraOffsetX <= 270) {
+      if (Player.getInstance().getX() + cameraOffsetX <= 270 && Player.getInstance().isMovingLeft()) {
          System.out.println("Pan left");
       }
-      if (Player.getInstance().getX() + cameraOffsetX >= 530) {
-         cameraOffsetX = Player.getInstance().getX() - 531;
-         
-         System.out.println("Pan right // Player X: " + Player.getInstance().getX() + " // cameraOffsetX: " + cameraOffsetX);
+      if (Player.getInstance().getX() + cameraOffsetX >= 530 && Player.getInstance().isMovingRight()) {
+         System.out.println("Pan right");         
       }
-      if (Player.getInstance().getY() + cameraOffsetY <= 150) {
+      if (Player.getInstance().getY() + cameraOffsetY <= 150 && Player.getInstance().isMovingUp()) {
          System.out.println("Pan up");
       }
-      if (Player.getInstance().getY() + cameraOffsetY >= 300) {
+      if (Player.getInstance().getY() + cameraOffsetY >= 300 && Player.getInstance().isMovingDown()) {
          System.out.println("Pan down");
       }
    }
