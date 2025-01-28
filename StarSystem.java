@@ -52,9 +52,9 @@ public class StarSystem {
       //until then it is 2 ;)
       int numGates = 2;
       
-      planets = new ArrayList<>();
-      asteroids = new ArrayList<>();
-      gates = new ArrayList<>();
+      this.planets = new ArrayList<>();
+      this.asteroids = new ArrayList<>();
+      this.gates = new ArrayList<>();
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
@@ -68,7 +68,7 @@ public class StarSystem {
         
          int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius; //getting a random radius and distance for each planet 
          int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
-         planets.add(new Planet(color, distance, 30, radius, 100));
+         this.planets.add(new Planet(color, distance, 30, radius, 100));
          System.out.println("new planet");
       }
       
@@ -81,7 +81,7 @@ public class StarSystem {
          int speed = rand.nextInt(50) + 50; // Random speed between 50 and 100
          double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
       
-         asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
+         this.asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
          System.out.println("new asteroid");
       }
       
@@ -89,7 +89,7 @@ public class StarSystem {
       for (int i = 0; i < numGates; i++) {
                      //still need to get accurate next system. rn im just doing +1
                               // this rand allows for gates to spawn in orbit path. this needs to be fixed.
-         gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
+         //this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
       }
       
       int numStars = 100000; // Number of stars to draw
@@ -112,15 +112,15 @@ public class StarSystem {
       
    }
    public List<Planet> getPlanets() {
-       return planets;
+       return this.planets;
    }
    
    public void checkPlayerPlanetCollisions(Player player) {
        // Check against each planet
-       for (Planet planet : planets) {
+       for (Planet planet : this.planets) {
            if (planet.isCollidingWith(player)) {
                planet.handleCollision(player);
-               System.out.println("collision check");
+               //System.out.println("collision check");
                // Break here if you only want to handle one collision at a time
                //break;
            }
@@ -128,7 +128,7 @@ public class StarSystem {
    }
 
    public void collisionCheck(GraphicsContext gc) {
-    for (Gate gate : gates) {
+    for (Gate gate : this.gates) {
         if (Player.getBounds().getBoundsInParent().intersects(gate.getBounds().getBoundsInParent())) {
             gate.activate(gc); // Trigger gate logic without clearing the canvas here
             return; // Exit loop after detecting a collision
