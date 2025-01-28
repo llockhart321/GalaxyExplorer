@@ -42,4 +42,65 @@ public class Planet {
       gc.fillOval(x, y, radius * 2, radius * 2); // Draw the planet as a circle
       
    }
+   // Add these methods to your Planet class
+   public boolean isCollidingWith(Player player) {
+       // Get player's center coordinates
+       double playerCenterX = player.getX() + Player.getBounds().getWidth() / 2;
+       double playerCenterY = player.getY() + Player.getBounds().getHeight() / 2;
+       
+       // Get planet's position
+       double planetCenterX = getRelativeX(0);
+       double planetCenterY = getRelativeY(0);
+       
+       // Calculate distance between centers
+       double distance = Math.sqrt(
+           Math.pow(playerCenterX - planetCenterX, 2) + 
+           Math.pow(playerCenterY - planetCenterY, 2)
+       );
+       
+       // Define the minimum allowed distance (sum of radii)
+       double minDistance = radius + (Player.getBounds().getWidth() / 2);
+       
+       // Return true if we're too close
+       return distance <= minDistance;
+   }
+   
+   public void handleCollision(Player player) {
+       // Get positions
+       double playerCenterX = player.getX() + Player.getBounds().getWidth() / 2;
+       double playerCenterY = player.getY() + Player.getBounds().getHeight() / 2;
+       double planetCenterX = getRelativeX(0);
+       double planetCenterY = getRelativeY(0);
+       
+       // Calculate vector from planet to player
+       double dx = playerCenterX - planetCenterX;
+       double dy = playerCenterY - planetCenterY;
+       
+       // Calculate current distance
+       double currentDistance = Math.sqrt(dx * dx + dy * dy);
+       
+       // Calculate minimum allowed distance
+       double minDistance = radius + (Player.getBounds().getWidth() / 2);
+       
+       if (currentDistance < minDistance && currentDistance > 0) {
+           // Normalize the direction vector
+           double nx = dx / currentDistance;
+           double ny = dy / currentDistance;
+           
+           // Calculate how far to push the player out
+           double pushDistance = minDistance - currentDistance;
+           
+           // Set player's new position to be exactly at the minimum distance
+           double newX = player.getX() + (nx * pushDistance);
+           double newY = player.getY() + (ny * pushDistance);
+           
+           // Update player position
+           player.setX(newX);
+           player.setY(newY);
+           
+           // Stop movement in collision direction
+           player.setLeftright(0);
+           player.setUpdown(0);
+       }
+   }
 }

@@ -38,38 +38,41 @@ public class Asteroid {
     }
 
     public boolean checkMissileCollision(Point2D missilePos, double missileRadius) {
-        Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
+    Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
+    
+    for (Iterator<AsteroidPart> iterator = parts.iterator(); iterator.hasNext();) {
+        AsteroidPart part = iterator.next();
+        Point2D partWorldPos = asteroidCenter.add(part.getPosition());
         
-        for (Iterator<AsteroidPart> iterator = parts.iterator(); iterator.hasNext();) {
-            AsteroidPart part = iterator.next();
-            Point2D partWorldPos = asteroidCenter.add(part.getPosition());
+        if (partWorldPos.distance(missilePos) < (part.getRadius() + missileRadius)) {
+            // Calculate impact direction
+            Point2D impactDir = partWorldPos.subtract(missilePos).normalize();
             
-            if (partWorldPos.distance(missilePos) < (part.getRadius() + missileRadius)) {
-                // Calculate impact direction
-                Point2D impactDir = partWorldPos.subtract(missilePos).normalize();
-                
-                // Remove the hit part
-                iterator.remove();
-                
-                // If asteroid was intact, apply impact force and disable orbital motion
-                if (isIntact) {
-                    isIntact = false;
-                    for (AsteroidPart remainingPart : parts) {
-                        Point2D partPos = remainingPart.getPosition();
-                        double distance = partPos.distance(part.getPosition());
-                        double forceFactor = 1.0 / (1.0 + distance);
-                        Point2D impulse = impactDir.multiply(IMPACT_FORCE * forceFactor);
-                        remainingPart.setVelocity(remainingPart.getVelocity().add(impulse));
-                    }
+            // Remove the hit part
+            iterator.remove();
+            
+            // If asteroid was intact, apply impact force and disable orbital motion
+            if (isIntact) {
+                isIntact = false;
+                for (AsteroidPart remainingPart : parts) {
+                    Point2D partPos = remainingPart.getPosition();
+                    double distance = partPos.distance(part.getPosition());
+                    double forceFactor = 1.0 / (1.0 + distance);
+                    
+                    // Calculate force direction away from the impact
+                    Point2D forceDir = partPos.subtract(part.getPosition()).normalize();
+                    Point2D impulse = forceDir.multiply(IMPACT_FORCE * forceFactor);
+                    remainingPart.setVelocity(remainingPart.getVelocity().add(impulse));
                 }
-                
-                // Recalculate groups after impact
-                updateGroups();
-                return true;
             }
+            
+            // Recalculate groups after impact
+            updateGroups();
+            return true;
         }
-        return false;
     }
+    return false;
+}
 
     private void updateGroups() {
         if (parts.isEmpty()) return;
@@ -104,29 +107,25 @@ public class Asteroid {
     }
 
     private void updatePosition() {
-        if (isIntact) {
-            // Update orbital position
-            orbitalPosition += Math.toRadians(orbitalSpeed / centerDistance);
-            if (orbitalPosition > 2 * Math.PI) {
-                orbitalPosition -= 2 * Math.PI;
-            }
-        } else {
-            // Update individual part positions based on velocity
-            for (AsteroidPart part : parts) {
-                Point2D pos = part.getPosition();
-                Point2D vel = part.getVelocity();
-                
-                // Apply a small amount of orbital force if parts are still somewhat close to original orbit
-                Point2D centerDir = new Point2D(-pos.getX(), -pos.getY()).normalize();
-                vel = vel.add(centerDir.multiply(ORBITAL_FORCE));
-                
-                // Update position and velocity
-                pos = pos.add(vel);
-                part.setPosition(pos);
-                part.setVelocity(vel);
-            }
-        }
-    }
+       if (isIntact) {
+           // Update orbital position for intact asteroids
+           orbitalPosition += Math.toRadians(orbitalSpeed / centerDistance);
+           if (orbitalPosition > 2 * Math.PI) {
+               orbitalPosition -= 2 * Math.PI;
+           }
+       } else {
+           // Update individual part positions based on velocity without orbital force
+           for (AsteroidPart part : parts) {
+               Point2D pos = part.getPosition();
+               Point2D vel = part.getVelocity();
+               
+               // Update position only
+               pos = pos.add(vel);
+               part.setPosition(pos);
+               part.setVelocity(vel);
+           }
+       }
+   }
 
     public double getRelativeX() {
         return 400 + centerDistance * Math.cos(orbitalPosition);

@@ -58,8 +58,8 @@ public class StarSystem {
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
-         int minRadius = 10;
-         int maxRadius = 20;
+         int minRadius = 80;
+         int maxRadius = 200;
          int minDistance = 200;
          int maxDistance = 600; //setting mins and maxes for random parameters for planets 
        
@@ -92,15 +92,16 @@ public class StarSystem {
          gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
       }
       
-      int numStars = 100; // Number of stars to draw
+      int numStars = 100000; // Number of stars to draw
       for (int i = 0; i < numStars; i++) {
-         double x = rand.nextDouble() * 1000;
-         double y = rand.nextDouble() * 1000;
-         double radius = rand.nextDouble() * 2 + 1; // Random size for stars (1-3 pixels)
-            
-         starX.add(x);
-         starY.add(y);
-         starRadius.add(radius);
+          // Generate random positions within a 4000x2250 space
+          double x = (rand.nextDouble() * 40000) - 20000;
+          double y = (rand.nextDouble() * 22500) - 11250;
+          double radius = rand.nextDouble() * 2 + 1; // Random size for stars (1-3 pixels)
+          
+          starX.add(x);
+          starY.add(y);
+          starRadius.add(radius);
       }
         
        // planet = new Planet(Color.BLUE, 500, 30, 10, 100);
@@ -110,18 +111,30 @@ public class StarSystem {
    
       
    }
-
-   public void collisionCheck(GraphicsContext gc){
-      //check if player collides with gate
-      for (int i = 0; i<gates.size(); i++){
-         if (Player.getBounds().getBoundsInParent().intersects(gates.get(i).getBounds().getBoundsInParent())) {
-                 
-            gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-            gates.get(i).activate(gc);
-         }
-          
-      }
+   public List<Planet> getPlanets() {
+       return planets;
    }
+   
+   public void checkPlayerPlanetCollisions(Player player) {
+       // Check against each planet
+       for (Planet planet : planets) {
+           if (planet.isCollidingWith(player)) {
+               planet.handleCollision(player);
+               System.out.println("collision check");
+               // Break here if you only want to handle one collision at a time
+               //break;
+           }
+       }
+   }
+
+   public void collisionCheck(GraphicsContext gc) {
+    for (Gate gate : gates) {
+        if (Player.getBounds().getBoundsInParent().intersects(gate.getBounds().getBoundsInParent())) {
+            gate.activate(gc); // Trigger gate logic without clearing the canvas here
+            return; // Exit loop after detecting a collision
+        }
+    }
+}
 
 
    public int getID(){
@@ -155,11 +168,9 @@ public class StarSystem {
       nebula.draw(gc);
         
       gc.setFill(Color.WHITE);
-      for(int i=0; i<starX.size(); i++)
-      {
-         gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
-      }
-        
+      for (int i = 0; i < starX.size(); i++) {
+          gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
+      }        
    
       
         

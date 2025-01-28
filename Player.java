@@ -30,11 +30,10 @@ public class Player {
    // Private constructor
    private Player() {
       // Set player on screen
-      x = 480;
-      y = 200;
+      x = 0;
+      y = 0;
       bounds.setX(x);
       bounds.setY(y);
-      
    }
    public static Rectangle getBounds(){
       return bounds;
@@ -69,9 +68,9 @@ public class Player {
    public boolean isMovingLeft() { 
       return leftright == -1; }
    public boolean isMovingUp() { 
-      return leftright == -1; }
+      return updown == -1; }
    public boolean isMovingDown() { 
-      return leftright == 1; }
+      return updown == 1; }
    
    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
       gc.setFill(Color.LIGHTBLUE);
