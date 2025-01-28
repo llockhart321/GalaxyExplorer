@@ -52,8 +52,8 @@ public class StarSystem {
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
-         int minRadius = 10;
-         int maxRadius = 20;
+         int minRadius = 80;
+         int maxRadius = 200;
          int minDistance = 200;
          int maxDistance = 600; //setting mins and maxes for random parameters for planets 
        
@@ -106,17 +106,14 @@ public class StarSystem {
       
    }
 
-   public void collisionCheck(GraphicsContext gc){
-      //check if player collides with gate
-      for (int i = 0; i<gates.size(); i++){
-         if (Player.getBounds().getBoundsInParent().intersects(gates.get(i).getBounds().getBoundsInParent())) {
-                 
-            gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-            gates.get(i).activate(gc);
-         }
-          
-      }
-   }
+   public void collisionCheck(GraphicsContext gc) {
+    for (Gate gate : gates) {
+        if (Player.getBounds().getBoundsInParent().intersects(gate.getBounds().getBoundsInParent())) {
+            gate.activate(gc); // Trigger gate logic without clearing the canvas here
+            return; // Exit loop after detecting a collision
+        }
+    }
+}
 
 
    public int getID(){
