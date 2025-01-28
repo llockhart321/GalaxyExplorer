@@ -24,6 +24,12 @@ public class StarSystem {
    private static int idCounter = 0;
    private StarSystemNebula nebula;
 
+
+   // this is the location of the star systejm in the map.
+   private double xLoc;
+   private double yLoc;
+
+
    public StarSystem(GraphicsContext gc, int potentialID) {
       if(potentialID == -1){     
          this.ID = idCounter++;
@@ -175,6 +181,26 @@ public class StarSystem {
          asteroid.drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
       Player.getInstance().drawMe(gc, cameraOffsetX, cameraOffsetY);
-   }   
+   }
+
+
+
+   // getters and setters for maptivities
+   public double getxLoc() {
+      return xLoc;
+   }
+
+   public double getyLoc() {
+      return yLoc;
+   }
+
+   public void setxLoc(double xLoc) {
+      this.xLoc = xLoc;
+   }
+
+   public void setyLoc(double yLoc) {
+      this.yLoc = yLoc;
+   }
+
 
 }

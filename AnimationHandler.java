@@ -20,6 +20,8 @@ public class AnimationHandler extends AnimationTimer {
       gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
       system.drawMe(gc);
       system.collisionCheck(gc);
+      //System.out.println(system+" " +Player.getInstance());
+
       
       //missiles update
       MissileSystem.getInstance().update(gc, c.getMapCenterOffsetX(), c.getMapCenterOffsetY());
