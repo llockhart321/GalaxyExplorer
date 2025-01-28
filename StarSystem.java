@@ -104,6 +104,21 @@ public class StarSystem {
    
       
    }
+   public List<Planet> getPlanets() {
+       return planets;
+   }
+   
+   public void checkPlayerPlanetCollisions(Player player) {
+       // Check against each planet
+       for (Planet planet : planets) {
+           if (planet.isCollidingWith(player)) {
+               planet.handleCollision(player);
+               System.out.println("collision check");
+               // Break here if you only want to handle one collision at a time
+               //break;
+           }
+       }
+   }
 
    public void collisionCheck(GraphicsContext gc) {
     for (Gate gate : gates) {
