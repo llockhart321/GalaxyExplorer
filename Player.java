@@ -69,9 +69,9 @@ public class Player {
    public boolean isMovingLeft() { 
       return leftright == -1; }
    public boolean isMovingUp() { 
-      return leftright == -1; }
+      return updown == -1; }
    public boolean isMovingDown() { 
-      return leftright == 1; }
+      return updown == 1; }
    
    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
       gc.setFill(Color.LIGHTBLUE);
