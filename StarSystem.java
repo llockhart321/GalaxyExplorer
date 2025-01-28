@@ -86,15 +86,16 @@ public class StarSystem {
          gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
       }
       
-      int numStars = 100; // Number of stars to draw
+      int numStars = 100000; // Number of stars to draw
       for (int i = 0; i < numStars; i++) {
-         double x = rand.nextDouble() * 1000;
-         double y = rand.nextDouble() * 1000;
-         double radius = rand.nextDouble() * 2 + 1; // Random size for stars (1-3 pixels)
-            
-         starX.add(x);
-         starY.add(y);
-         starRadius.add(radius);
+          // Generate random positions within a 4000x2250 space
+          double x = (rand.nextDouble() * 40000) - 20000;
+          double y = (rand.nextDouble() * 22500) - 11250;
+          double radius = rand.nextDouble() * 2 + 1; // Random size for stars (1-3 pixels)
+          
+          starX.add(x);
+          starY.add(y);
+          starRadius.add(radius);
       }
         
        // planet = new Planet(Color.BLUE, 500, 30, 10, 100);
@@ -161,11 +162,9 @@ public class StarSystem {
       nebula.draw(gc);
         
       gc.setFill(Color.WHITE);
-      for(int i=0; i<starX.size(); i++)
-      {
-         gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
-      }
-        
+      for (int i = 0; i < starX.size(); i++) {
+          gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
+      }        
    
       
         
