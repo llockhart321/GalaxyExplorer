@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
 import javafx.scene.shape.Rectangle;
+import javafx.geometry.Point2D;
+
 
 
 public class StarSystem {
@@ -67,52 +69,52 @@ public class StarSystem {
               // Generate asteroids
       int asteroidDistance = 300; // Fixed distance for all asteroids
       for (int i = 0; i < numAsteroids; i++) {
-            int minRadius = 3;
-            int maxRadius = 8;
-            int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
-            int speed = rand.nextInt(50) + 50; // Random speed between 50 and 100
-            double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
-
-            asteroids.add(new Asteroid(asteroidDistance, position, radius, speed));
-             System.out.println("new asteroid");
-        }
+         int minRadius = 3;
+         int maxRadius = 8;
+         int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
+         int speed = rand.nextInt(50) + 50; // Random speed between 50 and 100
+         double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
+      
+         asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
+         System.out.println("new asteroid");
+      }
       
       //add gates
-       for (int i = 0; i < numGates; i++) {
+      for (int i = 0; i < numGates; i++) {
                      //still need to get accurate next system. rn im just doing +1
                               // this rand allows for gates to spawn in orbit path. this needs to be fixed.
          gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
       }
       
-        int numStars = 100; // Number of stars to draw
-        for (int i = 0; i < numStars; i++) {
-            double x = rand.nextDouble() * 1000;
-            double y = rand.nextDouble() * 1000;
-            double radius = rand.nextDouble() * 2 + 1; // Random size for stars (1-3 pixels)
+      int numStars = 100; // Number of stars to draw
+      for (int i = 0; i < numStars; i++) {
+         double x = rand.nextDouble() * 1000;
+         double y = rand.nextDouble() * 1000;
+         double radius = rand.nextDouble() * 2 + 1; // Random size for stars (1-3 pixels)
             
-            starX.add(x);
-            starY.add(y);
-            starRadius.add(radius);
-        }
+         starX.add(x);
+         starY.add(y);
+         starRadius.add(radius);
+      }
         
        // planet = new Planet(Color.BLUE, 500, 30, 10, 100);
         
       
       // Fill the gates arraylist
-
+   
       
    }
 
    public void collisionCheck(GraphicsContext gc){
       //check if player collides with gate
       for (int i = 0; i<gates.size(); i++){
-          if (Player.getBounds().getBoundsInParent().intersects(gates.get(i).getBounds().getBoundsInParent())) {
+         if (Player.getBounds().getBoundsInParent().intersects(gates.get(i).getBounds().getBoundsInParent())) {
                  
-                  gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-                  gates.get(i).activate(gc);
-          }
+            gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+            gates.get(i).activate(gc);
+         }
           
-       }
+      }
    }
 
 
@@ -120,43 +122,59 @@ public class StarSystem {
       return this.ID;
    }
    
-   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
-        // Set the background to black
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, 1000,1000);
+   public boolean checkMissileCollisions(Point2D missilePos, double missileRadius) {
+       Iterator<Asteroid> iter = asteroids.iterator();
+       while (iter.hasNext()) {
+           Asteroid asteroid = iter.next();
+           if (asteroid.checkMissileCollision(missilePos, missileRadius)) {
+               if (asteroid.isEmpty()) {
+                   iter.remove();
+               }
+               return true;
+           }
+       }
+       return false;
+   }
+   
+   public void drawMe(GraphicsContext gc) {
+      double cameraOffsetX = Camera.getInstance(this).getMapCenterOffsetX();
+      double cameraOffsetY = Camera.getInstance(this).getMapCenterOffsetY();
+      // Set the background to black
+      gc.setFill(Color.BLACK);
+      gc.fillRect(0, 0, 1000,1000);
         
         
         //draw nebula
-        nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
-        nebula.draw(gc);
+      nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
+      nebula.draw(gc);
         
-        gc.setFill(Color.WHITE);
-        for(int i=0; i<starX.size(); i++)
-        {
-            gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
-        }
+      gc.setFill(Color.WHITE);
+      for(int i=0; i<starX.size(); i++)
+      {
+         gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
+      }
         
-
+   
       
         
         // draw gates
-        for (int i = 0; i<gates.size(); i++){
-            gates.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
-        }
+      for (int i = 0; i<gates.size(); i++){
+         gates.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
+      }
         
         
-
+   
         //planet.drawMe(gc);
         
-        for (int i = 0; i < planets.size(); i++) {
-         planets.get(i).drawMe(gc);
+      for (int i = 0; i < planets.size(); i++) {
+         planets.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
       
          // Draw asteroids
-        for (Asteroid asteroid : asteroids) {
-            asteroid.drawMe(gc);
-        }
-        
-    }   
+      for (Asteroid asteroid : asteroids) {
+         asteroid.drawMe(gc, cameraOffsetX, cameraOffsetY);
+      }
+      Player.getInstance().drawMe(gc, cameraOffsetX, cameraOffsetY);
+   }   
 
 }

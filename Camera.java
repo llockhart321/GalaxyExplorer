@@ -1,47 +1,46 @@
-// Signleton Camera class to handle as the player moves around the galaxy
+// Singleton camera that holds the map (system) and player
 public class Camera {
-   // doubles to handle how much from the initial start the camera will need to draw
-   double cameraOffsetX, cameraOffsetY;
-   // Instance
+   // Private variables for isntance, map, and player
    private static Camera instance;
-   // Constructor will need to start at 0, 0 for each StarSystem
-   public static Camera getInstance() {
+   private StarSystem ss;
+   private Player p;
+   // Important location variables
+   private double mapCenterOffsetX, mapCenterOffsetY, playerX, playerY;
+   private int leftBound = 200;
+   private int rightBound = 600;
+   private int upBound = 120;
+   private int downBound = 330;
+   // Public getInstance that takes in the current map
+   public static Camera getInstance(StarSystem ss) {
       if (instance == null) {
-         instance = new Camera();
+         instance = new Camera(ss);
       }
       return instance;
    }
-   private Camera() {
-      cameraOffsetX = 0;
-      cameraOffsetY = 0;
+   // Private constructor with public map passed through and getting Player instance
+   private Camera(StarSystem ss) {
+      this.ss = ss;
+      p = Player.getInstance();
    }
-   // Getters and Setters for the camera offset variables
-   public void setCameraOffsetX(double cameraOffsetX) { this.cameraOffsetX = cameraOffsetX; }
-   public void setCameraOffsetY(double cameraOffsetY) { this.cameraOffsetY = cameraOffsetY; }
-   public double getCameraOffsetX() { return cameraOffsetX; }
-   public double getCameraOffsetY() { return cameraOffsetY; }
-   // Method called every tick to check if the camera needs to pan from last tick
-   public void checkPlayerPosition() {
-      if (Player.getInstance().getX() + cameraOffsetX <= 270 && Player.getInstance().isMovingLeft()) {
-         System.out.println("Pan left");
-         double playerRelativeX = Player.getInstance().getX() - 270;
+   public void update() {
+      playerX = p.getX();
+      playerY = p.getY();
+      if (playerX > rightBound && p.isMovingRight()) {
+         mapCenterOffsetX = playerX - rightBound;
+      } else if (playerX < leftBound && p.isMovingLeft()) {
+         mapCenterOffsetX = playerX - leftBound;
       }
-      if (Player.getInstance().getX() + cameraOffsetX >= 530 && Player.getInstance().isMovingRight()) {
-         System.out.println("Pan right");
-         double playerRelativeX = Player.getInstance().getX() - 530;
-      }
-      if (Player.getInstance().getY() + cameraOffsetY <= 150 && Player.getInstance().isMovingUp()) {
-         System.out.println("Pan up");
-         double playerRelativeY = Player.getInstance().getY() - 150;
-      }
-      if (Player.getInstance().getY() + cameraOffsetY >= 300 && Player.getInstance().isMovingDown()) {
-         System.out.println("Pan down");
-         double playerRelativeY = Player.getInstance().getY() - 300;
+      if (playerY > downBound && p.isMovingDown()) {
+         mapCenterOffsetY = playerY - downBound;
+      } else if (playerY < upBound && p.isMovingUp()) {
+         mapCenterOffsetY = playerY - upBound;
       }
    }
-   // Method to reset the camera to 0 when a new level is started
-   public void reset() {
-      cameraOffsetX = 0;
-      cameraOffsetY = 0;
+   public double getMapCenterOffsetX() {
+      return mapCenterOffsetX;
+   }
+
+   public double getMapCenterOffsetY() {
+      return mapCenterOffsetY;
    }
 }
