@@ -30,11 +30,10 @@ public class Player {
    // Private constructor
    private Player() {
       // Set player on screen
-      x = 480;
-      y = 200;
+      x = 0;
+      y = 0;
       bounds.setX(x);
       bounds.setY(y);
-      
    }
    public static Rectangle getBounds(){
       return bounds;
