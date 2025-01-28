@@ -67,6 +67,7 @@ public class Gate {
          //create this new system.
          newSys = new StarSystem(gc, targetSystem);
          StarSystemCache.add( newSys );
+         // galaxyMap.discoverChunkFromSystemCoords(systemX, systemY);
       }
       else{
          newSys = StarSystemCache.get(targetSystem);

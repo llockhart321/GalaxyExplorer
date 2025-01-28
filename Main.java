@@ -5,6 +5,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.stage.*;
 
+
 public class Main extends Application {
    public void start(Stage primaryStage) {
       // Create a FlowPane
@@ -28,7 +29,7 @@ public class Main extends Application {
       //set player start system
       StarSystem startSystem = new StarSystem(gc, -1); 
       StarSystemCache.add(startSystem);
-      Player.getInstance().setSystem(startSystem);
+
       
       
       
@@ -37,6 +38,7 @@ public class Main extends Application {
       
       //get map ready
       GalaxyMap.getInstance().set(gc, ah);
+      Player.getInstance().setSystem(startSystem);
       
       ah.start();
    

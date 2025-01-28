@@ -1,5 +1,7 @@
 import java.util.*;
 // Concrete Aggregate
+
+/*
 public class Galaxy implements Aggregate<StarSystem> {
     private List<StarSystem> systems;
 
@@ -12,3 +14,5 @@ public class Galaxy implements Aggregate<StarSystem> {
         return new StarSystemIterator(systems);
     }
 }
+
+ */

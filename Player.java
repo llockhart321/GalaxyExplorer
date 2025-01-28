@@ -71,5 +71,6 @@ public class Player {
    }
    public void setSystem(StarSystem sys){
       currentSystem = sys;
+      GalaxyMap.getInstance().setCurrentSystem(currentSystem.getID());
    }
 }
