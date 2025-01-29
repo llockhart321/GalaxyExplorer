@@ -26,8 +26,8 @@ public class MissileSystem {
         }
         
         Player player = Player.getInstance();
-        double playerCenterX = player.getX() + player.getBounds().getWidth() / 2;
-        double playerCenterY = player.getY() + player.getBounds().getHeight() / 2;
+        double playerCenterX = player.getX() + 40 / 2;
+        double playerCenterY = player.getY() + 40 / 2;
 
         // Add camera offset to mouse position since it's in screen coordinates
         Camera camera = Camera.getInstance(player.getSystem());

@@ -27,33 +27,44 @@ public class Planet {
    }
    // Method to continually update the position
    private void updatePosition() {
-       position += Math.toRadians(speed / distance); // Increment position by speed (converted to radians)
+       // Update orbital position
+       position += Math.toRadians(speed / distance);
        if (position > 2 * Math.PI) {
-           position -= 2 * Math.PI; // Ensure the position stays within 0 to 2π
+           position -= 2 * Math.PI;
        }
 
-       // Update the bounds of the Circle
-       double x = getRelativeX(500); // Calculate current center X
-       double y = getRelativeY(500); // Calculate current center Y
-       bounds.setCenterX(x); // Update the center X of the bounds
-       bounds.setCenterY(y); // Update the center Y of the bounds
+       // Calculate new world position
+       double newX = getRelativeX(500);
+       double newY = getRelativeY(500);
+
+       // Update collision bounds
+       bounds.setCenterX(newX);
+       bounds.setCenterY(newY);
    }
 
-    // Methods to return the x and y variabels relative to the position of the central star
-   public double getRelativeX(double relativex0) {
-      return 200 + distance * Math.cos(position); // Calculate X coordinate
-   }
-   
-   public double getRelativeY(double relativex0) {
-      return 200 + distance * Math.sin(position); // Calculate Y coordinate
-   }
+    public double getRelativeX(double relativex0) {
+        return 200 + distance * Math.cos(position);
+    }
+
+    public double getRelativeY(double relativex0) {
+        return 200 + distance * Math.sin(position);
+    }
+
    
    // Method to draw the planet
-   public void drawMe(GraphicsContext gc, double playerOffsetX, double cameraOffsetY) {
+    /*
+   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
        updatePosition(); // Update the position before drawing
 
-       double x = bounds.getCenterX() - radius; // Adjust for the planet's radius
-       double y = bounds.getCenterY() - radius; // Adjust for the planet's radius
+
+       bounds.setCenterX(bounds.getCenterX()-cameraOffsetX);
+
+       bounds.setCenterY(bounds.getCenterY()-cameraOffsetY);
+
+
+       double x = bounds.getCenterX() - radius ; // Apply camera offset
+       double y = bounds.getCenterY() - radius ; // Apply camera offset
+
 
        // Draw the planet
        gc.setFill(color);
@@ -61,57 +72,89 @@ public class Planet {
 
        // Draw the bounds for debugging purposes
        gc.setStroke(Color.BLACK);
-       gc.strokeOval(bounds.getCenterX() - bounds.getRadius(), bounds.getCenterY() - bounds.getRadius(), bounds.getRadius() * 2, bounds.getRadius() * 2);
+       gc.strokeOval(bounds.getCenterX() - bounds.getRadius() ,
+               bounds.getCenterY() - bounds.getRadius() ,
+               bounds.getRadius() * 2,
+               bounds.getRadius() * 2);
    }
+   */
 
-    // Add these methods to your Planet class
-   public boolean isCollidingWith(Player player) {
+    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
+        updatePosition();
 
-       if (Player.getBounds().getBoundsInParent().intersects(this.bounds.getBoundsInParent())) {
-           return true;
-       }
-       else{
-           return false;
-       }
+        // Calculate screen position
+        double screenX = bounds.getCenterX() - radius - cameraOffsetX;
+        double screenY = bounds.getCenterY() - radius - cameraOffsetY;
 
-   }
-   
-   public void handleCollision(Player player) {
-       // Get positions
-       double playerCenterX = player.getX() + Player.getBounds().getWidth() / 2;
-       double playerCenterY = player.getY() + Player.getBounds().getHeight() / 2;
-       double planetCenterX = getRelativeX(0);
-       double planetCenterY = getRelativeY(0);
-       
-       // Calculate vector from planet to player
-       double dx = playerCenterX - planetCenterX;
-       double dy = playerCenterY - planetCenterY;
-       
-       // Calculate current distance
-       double currentDistance = Math.sqrt(dx * dx + dy * dy);
-       
-       // Calculate minimum allowed distance
-       double minDistance = radius + (Player.getBounds().getWidth() / 2);
-       
-       if (currentDistance < minDistance && currentDistance > 0) {
-           // Normalize the direction vector
-           double nx = dx / currentDistance;
-           double ny = dy / currentDistance;
-           
-           // Calculate how far to push the player out
-           double pushDistance = minDistance - currentDistance;
-           
-           // Set player's new position to be exactly at the minimum distance
-           double newX = player.getX() + (nx * pushDistance);
-           double newY = player.getY() + (ny * pushDistance);
-           
-           // Update player position
-           player.setX(newX);
-           player.setY(newY);
-           
-           // Stop movement in collision direction
-           player.setLeftright(0);
-           player.setUpdown(0);
-       }
-   }
+        // Draw the planet
+        gc.setFill(color);
+        gc.fillOval(screenX, screenY, radius * 2, radius * 2);
+
+        // Update collision bounds to match world position
+        bounds.setCenterX(getRelativeX(500));
+        bounds.setCenterY(getRelativeY(500));
+
+    }
+
+
+    public boolean isCollidingWith(Player player) {
+        // Get the actual positions of both circles in world space
+        Circle playerBounds = Player.getBounds();
+
+        // Create temporary circles at the actual world positions for collision check
+        Circle tempPlayerCircle = new Circle(
+                player.getX() + playerBounds.getRadius(),  // center X = position + radius
+                player.getY() + playerBounds.getRadius(),  // center Y = position + radius
+                playerBounds.getRadius()
+        );
+
+        // Check actual geometric collision between circles
+        double dx = tempPlayerCircle.getCenterX() - bounds.getCenterX();
+        double dy = tempPlayerCircle.getCenterY() - bounds.getCenterY();
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        return distance < (bounds.getRadius() + tempPlayerCircle.getRadius());
+    }
+
+    public void handleCollision(Player player) {
+        // Get centers of both objects
+        Circle playerBounds = Player.getBounds();
+        double playerCenterX = player.getX() + playerBounds.getRadius();
+        double playerCenterY = player.getY() + playerBounds.getRadius();
+
+        // Calculate vector from planet to player
+        double dx = playerCenterX - bounds.getCenterX();
+        double dy = playerCenterY - bounds.getCenterY();
+
+        // Calculate current distance
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance == 0) {
+            // If centers are exactly the same, push player right
+            player.setX(player.getX() + playerBounds.getRadius() + bounds.getRadius());
+            return;
+        }
+
+        // Calculate minimum allowed distance
+        double minDistance = bounds.getRadius() + playerBounds.getRadius();
+
+        if (distance < minDistance) {
+            // Normalize the direction vector
+            double nx = dx / distance;
+            double ny = dy / distance;
+
+            // Calculate how far to push the player out
+            double pushDistance = minDistance - distance;
+
+            // Set player's new position to be exactly at the minimum distance
+            player.setX(player.getX() + (nx * pushDistance));
+            player.setY(player.getY() + (ny * pushDistance));
+
+            // Reset player movement state to prevent sticking
+            PlayerMovementState.getInstance().stopLeft();
+            PlayerMovementState.getInstance().stopRight();
+            PlayerMovementState.getInstance().stopUp();
+            PlayerMovementState.getInstance().stopDown();
+        }
+    }
 }

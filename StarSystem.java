@@ -89,7 +89,7 @@ public class StarSystem {
       for (int i = 0; i < numGates; i++) {
                      //still need to get accurate next system. rn im just doing +1
                               // this rand allows for gates to spawn in orbit path. this needs to be fixed.
-         //this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
+         this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400), this));
       }
       
       int numStars = 100000; // Number of stars to draw
@@ -127,14 +127,15 @@ public class StarSystem {
        }
    }
 
-   public void collisionCheck(GraphicsContext gc) {
-    for (Gate gate : this.gates) {
-        if (Player.getBounds().getBoundsInParent().intersects(gate.getBounds().getBoundsInParent())) {
-            gate.activate(gc); // Trigger gate logic without clearing the canvas here
-            return; // Exit loop after detecting a collision
+    public void collisionCheck(GraphicsContext gc) {
+        Player player = Player.getInstance();
+        for (Gate gate : this.gates) {
+            if (gate.isCollidingWith(player)) {
+                gate.activate(gc);
+                return;
+            }
         }
     }
-}
 
 
    public int getID(){
