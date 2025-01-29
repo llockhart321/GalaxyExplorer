@@ -191,7 +191,7 @@ public class Asteroid {
                 Point2D bounceDir = partWorldPos.subtract(playerCenter).normalize();
 
                 // Break apart the asteroid
-                isIntact = false;
+                /*isIntact = false;
 
                 // Apply forces to asteroid parts
                 for (AsteroidPart remainingPart : parts) {
@@ -210,7 +210,7 @@ public class Asteroid {
 
                 // Could add player bounce response here if desired
                 player.moveXBy(bounceDir.getX() * 5);
-                player.moveYBy(bounceDir.getY() * 5);
+                player.moveYBy(bounceDir.getY() * 5);*/
 
                 break; // Exit after first collision
             }

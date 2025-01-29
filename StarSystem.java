@@ -177,7 +177,7 @@ public class StarSystem {
        // Check planet-asteroid collisions
        for (Planet planet : planets) {
            for (Asteroid asteroid : asteroids) {
-               planet.checkAsteroidCollision(asteroid);
+               //planet.checkAsteroidCollision(asteroid);
            }
        }
 
