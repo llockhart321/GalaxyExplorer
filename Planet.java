@@ -1,3 +1,4 @@
+import javafx.geometry.Point2D;
 import javafx.scene.paint.*;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -156,5 +157,62 @@ public class Planet {
             PlayerMovementState.getInstance().stopUp();
             PlayerMovementState.getInstance().stopDown();
         }
+    }
+
+    public void checkAsteroidCollision(Asteroid asteroid) {
+        Point2D planetCenter = new Point2D(bounds.getCenterX(), bounds.getCenterY());
+        Point2D asteroidCenter = new Point2D(asteroid.getRelativeX(), asteroid.getRelativeY());
+
+        double collisionDist = bounds.getRadius() + 20; // approximate asteroid size
+        if (planetCenter.distance(asteroidCenter) < collisionDist) {
+            // Calculate bounce direction
+            Point2D bounceDir = asteroidCenter.subtract(planetCenter).normalize();
+
+            // Break apart the asteroid and apply force away from planet
+            asteroid.applyCollisionForce(bounceDir.multiply(0.1));
+        }
+    }
+
+    public void checkPlanetCollision(Planet other) {
+        double dx = other.bounds.getCenterX() - this.bounds.getCenterX();
+        double dy = other.bounds.getCenterY() - this.bounds.getCenterY();
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        double minDistance = this.bounds.getRadius() + other.bounds.getRadius();
+
+        if (distance < minDistance && distance > 0) {
+            // Calculate overlap
+            double overlap = minDistance - distance;
+
+            // Normalize direction vector
+            double nx = dx / distance;
+            double ny = dy / distance;
+
+            // Adjust positions (move each planet half the overlap)
+            double adjustX = nx * (overlap * 0.5);
+            double adjustY = ny * (overlap * 0.5);
+
+            // Adjust orbital positions instead of direct positions
+            this.adjustOrbit(-adjustX, -adjustY);
+            other.adjustOrbit(adjustX, adjustY);
+        }
+    }
+
+    private void adjustOrbit(double dx, double dy) {
+        // Convert cartesian adjustment to polar
+        double currentX = distance * Math.cos(position);
+        double currentY = distance * Math.sin(position);
+
+        // Apply small adjustment
+        currentX += dx * 0.1; // Reduced effect for gentler movement
+        currentY += dy * 0.1;
+
+        // Convert back to polar coordinates
+        distance = Math.sqrt(currentX * currentX + currentY * currentY);
+        position = Math.atan2(currentY, currentX);
+
+        // Update bounds
+        bounds.setCenterX(getRelativeX(500));
+        bounds.setCenterY(getRelativeY(500));
     }
 }

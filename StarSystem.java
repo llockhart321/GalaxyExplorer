@@ -136,6 +136,11 @@ public class StarSystem {
             }
         }
     }
+    public void checkPlayerAsteroidCollisions(Player player) {
+        for (Asteroid asteroid : asteroids) {
+            asteroid.checkPlayerCollision(player);
+        }
+    }
 
 
    public int getID(){
@@ -162,28 +167,42 @@ public class StarSystem {
       // Set the background to black
       gc.setFill(Color.BLACK);
       gc.fillRect(0, 0, 1000,1000);
-        
-        
-        //draw nebula
+
+       // Check planet-planet collisions
+       for (int i = 0; i < planets.size(); i++) {
+           for (int j = i + 1; j < planets.size(); j++) {
+               planets.get(i).checkPlanetCollision(planets.get(j));
+           }
+       }
+       // Check planet-asteroid collisions
+       for (Planet planet : planets) {
+           for (Asteroid asteroid : asteroids) {
+               planet.checkAsteroidCollision(asteroid);
+           }
+       }
+
+       checkPlayerAsteroidCollisions(Player.getInstance());
+
+       //draw nebula
       nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
       nebula.draw(gc);
-        
+
       gc.setFill(Color.WHITE);
       for (int i = 0; i < starX.size(); i++) {
           gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
-      }        
-   
-      
-        
+      }
+
+
+
         // draw gates
       for (int i = 0; i<gates.size(); i++){
          gates.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
-        
-        
-   
+
+
+
         //planet.drawMe(gc);
-        
+
       for (int i = 0; i < planets.size(); i++) {
          planets.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
