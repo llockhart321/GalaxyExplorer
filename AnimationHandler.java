@@ -31,7 +31,7 @@ public class AnimationHandler extends AnimationTimer {
       // PlayerMovementState will check if the player has moved
       PlayerMovementState.getInstance().move();
       // Update camera
-      c.update();
+      c.update(gc);
    }
    
 }

@@ -1,3 +1,6 @@
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+
 public class Camera {
    private static Camera instance;
    private StarSystem ss;
@@ -8,14 +11,16 @@ public class Camera {
    private final int WORLD_HEIGHT = 2250;
 
    // Screen bounds - accounting for player radius for smoother movement
-   private final int LEFT_BOUND = 300;
-   private final int RIGHT_BOUND = 500;
-   private final int UP_BOUND = 180;
-   private final int DOWN_BOUND = 270;
+   private final int LEFT_BOUND = 200;
+   private final int RIGHT_BOUND = 600;
+   private final int UP_BOUND = 80;
+   private final int DOWN_BOUND = 370;
 
    // Camera position
    private double mapCenterOffsetX = 0;
    private double mapCenterOffsetY = 0;
+  // private VisualEffects effects = VisualEffects.getInstance();
+
 
    public static Camera getInstance(StarSystem ss) {
       if (instance == null) {
@@ -30,7 +35,7 @@ public class Camera {
       p = Player.getInstance();
    }
 
-   public void update() {
+   public void update(GraphicsContext gc) {
       double playerCenterX = p.getX() + Player.getBounds().getRadius();
       double playerCenterY = p.getY() + Player.getBounds().getRadius();
 
@@ -38,6 +43,11 @@ public class Camera {
       double playerRadius = Player.getBounds().getRadius();
       double maxPlayerX = WORLD_WIDTH - (playerRadius * 2);
       double maxPlayerY = WORLD_HEIGHT - (playerRadius * 2);
+
+      //double[] effectOffsets = effects.getEffectOffsets(playerCenterX, playerCenterY, WORLD_WIDTH, WORLD_HEIGHT);
+      //mapCenterOffsetX += effectOffsets[0];
+      //amapCenterOffsetY += effectOffsets[1];
+
 
       if (p.getX() < 0) {
          p.setX(0);
@@ -70,8 +80,14 @@ public class Camera {
       }
 
       // Clamp camera position
-      //mapCenterOffsetX = clamp(mapCenterOffsetX, 0, WORLD_WIDTH - 800);
-      //mapCenterOffsetY = clamp(mapCenterOffsetY, 0, WORLD_HEIGHT - 450);
+      mapCenterOffsetX = clamp(mapCenterOffsetX, 0, WORLD_WIDTH - 800);
+      mapCenterOffsetY = clamp(mapCenterOffsetY, 0, WORLD_HEIGHT - 450);
+
+
+      gc.setStroke(Color.RED);
+      int width = RIGHT_BOUND - LEFT_BOUND;
+      int height = DOWN_BOUND - UP_BOUND;
+      gc.strokeRect(LEFT_BOUND, UP_BOUND, width, height);
    }
 
    private double clamp(double value, double min, double max) {
