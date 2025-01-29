@@ -215,4 +215,8 @@ public class Planet {
         bounds.setCenterX(getRelativeX(500));
         bounds.setCenterY(getRelativeY(500));
     }
+
+    public Circle getBounds() {
+        return bounds;
+    }
 }

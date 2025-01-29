@@ -215,6 +215,25 @@ public class StarSystem {
    }
 
 
+    public boolean checkMissilePlanetCollisions(Point2D missilePos, double missileRadius) {
+        for (Planet planet : planets) {
+            // Get planet center and radius
+            double planetX = planet.getRelativeX(500);
+            double planetY = planet.getRelativeY(500);
+            double planetRadius = planet.getBounds().getRadius();
+
+            // Calculate distance between missile and planet center
+            double dx = missilePos.getX() - planetX;
+            double dy = missilePos.getY() - planetY;
+            double distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Check if missile touches planet
+            if (distance < (planetRadius + missileRadius)) {
+                return true; // Collision detected
+            }
+        }
+        return false;
+    }
 
    // getters and setters for maptivities
    public double getxLoc() {

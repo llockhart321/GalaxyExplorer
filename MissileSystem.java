@@ -48,11 +48,13 @@ public class MissileSystem {
             Missile missile = iter.next();
             missile.update();
 
-            // Check for asteroid collisions
             StarSystem system = Player.getInstance().getSystem();
+
+            // Check for both asteroid and planet collisions
             boolean hitAsteroid = checkAsteroidCollisions(missile, system);
-            
-            if (hitAsteroid || !missile.isActive()) {
+            boolean hitPlanet = checkPlanetCollisions(missile, system);
+
+            if (hitAsteroid || hitPlanet || !missile.isActive()) {
                 iter.remove();
             } else {
                 missile.drawMe(gc, cameraOffsetX, cameraOffsetY);
@@ -62,5 +64,9 @@ public class MissileSystem {
 
     private boolean checkAsteroidCollisions(Missile missile, StarSystem system) {
         return system.checkMissileCollisions(missile.getPosition(), missile.getRadius());
+    }
+
+    private boolean checkPlanetCollisions(Missile missile, StarSystem system) {
+        return system.checkMissilePlanetCollisions(missile.getPosition(), missile.getRadius());
     }
 }
