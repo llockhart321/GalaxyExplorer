@@ -18,14 +18,20 @@ public class AnimationHandler extends AnimationTimer {
       system =  Player.getInstance().getSystem();
       // Clear the canvas each time
       gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
+      
+      // Check for planet collisions before moving the player
+      system.checkPlayerPlanetCollisions(Player.getInstance());
       system.drawMe(gc);
       system.collisionCheck(gc);
+      //System.out.println(system+" " +Player.getInstance());
+
       
       //missiles update
       MissileSystem.getInstance().update(gc, c.getMapCenterOffsetX(), c.getMapCenterOffsetY());
       // PlayerMovementState will check if the player has moved
       PlayerMovementState.getInstance().move();
       // Update camera
-      c.update();
+      c.update(gc);
    }
+   
 }

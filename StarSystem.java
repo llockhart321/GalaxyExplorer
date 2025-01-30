@@ -24,6 +24,12 @@ public class StarSystem {
    private static int idCounter = 0;
    private StarSystemNebula nebula;
 
+
+   // this is the location of the star systejm in the map.
+   private double xLoc;
+   private double yLoc;
+
+
    public StarSystem(GraphicsContext gc, int potentialID) {
       if(potentialID == -1){     
          this.ID = idCounter++;
@@ -46,9 +52,9 @@ public class StarSystem {
       //until then it is 2 ;)
       int numGates = 2;
       
-      planets = new ArrayList<>();
-      asteroids = new ArrayList<>();
-      gates = new ArrayList<>();
+      this.planets = new ArrayList<>();
+      this.asteroids = new ArrayList<>();
+      this.gates = new ArrayList<>();
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
@@ -62,7 +68,7 @@ public class StarSystem {
         
          int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius; //getting a random radius and distance for each planet 
          int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
-         planets.add(new Planet(color, distance, 30, radius, 100));
+         this.planets.add(new Planet(color, distance, 30, radius, 100));
          System.out.println("new planet");
       }
       
@@ -75,7 +81,7 @@ public class StarSystem {
          int speed = rand.nextInt(50) + 50; // Random speed between 50 and 100
          double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
       
-         asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
+         this.asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
          System.out.println("new asteroid");
       }
       
@@ -83,7 +89,7 @@ public class StarSystem {
       for (int i = 0; i < numGates; i++) {
                      //still need to get accurate next system. rn im just doing +1
                               // this rand allows for gates to spawn in orbit path. this needs to be fixed.
-         gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400)));
+         this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400), this));
       }
       
       int numStars = 100000; // Number of stars to draw
@@ -105,15 +111,36 @@ public class StarSystem {
    
       
    }
+   public List<Planet> getPlanets() {
+       return this.planets;
+   }
+   
+   public void checkPlayerPlanetCollisions(Player player) {
+       // Check against each planet
+       for (Planet planet : this.planets) {
+           if (planet.isCollidingWith(player)) {
+               planet.handleCollision(player);
+               //System.out.println("collision check");
+               // Break here if you only want to handle one collision at a time
+               //break;
+           }
+       }
+   }
 
-   public void collisionCheck(GraphicsContext gc) {
-    for (Gate gate : gates) {
-        if (Player.getBounds().getBoundsInParent().intersects(gate.getBounds().getBoundsInParent())) {
-            gate.activate(gc); // Trigger gate logic without clearing the canvas here
-            return; // Exit loop after detecting a collision
+    public void collisionCheck(GraphicsContext gc) {
+        Player player = Player.getInstance();
+        for (Gate gate : this.gates) {
+            if (gate.isCollidingWith(player)) {
+                gate.activate(gc);
+                return;
+            }
         }
     }
-}
+    public void checkPlayerAsteroidCollisions(Player player) {
+        for (Asteroid asteroid : asteroids) {
+            asteroid.checkPlayerCollision(player);
+        }
+    }
 
 
    public int getID(){
@@ -140,28 +167,42 @@ public class StarSystem {
       // Set the background to black
       gc.setFill(Color.BLACK);
       gc.fillRect(0, 0, 1000,1000);
-        
-        
-        //draw nebula
+
+       // Check planet-planet collisions
+       for (int i = 0; i < planets.size(); i++) {
+           for (int j = i + 1; j < planets.size(); j++) {
+               planets.get(i).checkPlanetCollision(planets.get(j));
+           }
+       }
+       // Check planet-asteroid collisions
+       for (Planet planet : planets) {
+           for (Asteroid asteroid : asteroids) {
+               //planet.checkAsteroidCollision(asteroid);
+           }
+       }
+
+       checkPlayerAsteroidCollisions(Player.getInstance());
+
+       //draw nebula
       nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
       nebula.draw(gc);
-        
+
       gc.setFill(Color.WHITE);
       for (int i = 0; i < starX.size(); i++) {
           gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
-      }        
-   
-      
-        
+      }
+
+
+
         // draw gates
       for (int i = 0; i<gates.size(); i++){
          gates.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
-        
-        
-   
+
+
+
         //planet.drawMe(gc);
-        
+
       for (int i = 0; i < planets.size(); i++) {
          planets.get(i).drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
@@ -171,6 +212,45 @@ public class StarSystem {
          asteroid.drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
       Player.getInstance().drawMe(gc, cameraOffsetX, cameraOffsetY);
-   }   
+   }
+
+
+    public boolean checkMissilePlanetCollisions(Point2D missilePos, double missileRadius) {
+        for (Planet planet : planets) {
+            // Get planet center and radius
+            double planetX = planet.getRelativeX(500);
+            double planetY = planet.getRelativeY(500);
+            double planetRadius = planet.getBounds().getRadius();
+
+            // Calculate distance between missile and planet center
+            double dx = missilePos.getX() - planetX;
+            double dy = missilePos.getY() - planetY;
+            double distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Check if missile touches planet
+            if (distance < (planetRadius + missileRadius)) {
+                return true; // Collision detected
+            }
+        }
+        return false;
+    }
+
+   // getters and setters for maptivities
+   public double getxLoc() {
+      return xLoc;
+   }
+
+   public double getyLoc() {
+      return yLoc;
+   }
+
+   public void setxLoc(double xLoc) {
+      this.xLoc = xLoc;
+   }
+
+   public void setyLoc(double yLoc) {
+      this.yLoc = yLoc;
+   }
+
 
 }

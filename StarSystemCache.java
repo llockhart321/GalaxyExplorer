@@ -5,7 +5,12 @@ class StarSystemCache {
     private static Map<Integer, StarSystem> systemCache = new HashMap<>();
  
     public static void add(StarSystem system) {
+
+
+        //system.setxLoc();
+
         systemCache.put(system.getID(), system);
+
     }
 
     
