@@ -129,6 +129,10 @@ public class StarSystem {
    public List<Planet> getPlanets() {
        return this.planets;
    }
+   public void debugRenderSunCoordinates(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
+    System.out.println("Sun Center X: " + Sun.WORLD_CENTER_X);
+    System.out.println("Sun Center Y: " + Sun.WORLD_CENTER_Y);
+}
    
    public void checkPlayerPlanetCollisions(Player player) {
        // Check against each planet
@@ -183,8 +187,7 @@ public class StarSystem {
       gc.setFill(Color.BLACK);
       gc.fillRect(0, 0, 1000,1000);
       
-       //draw the sun
-       sun.drawMe(gc, cameraOffsetX, cameraOffsetY);
+      
 
        // Check planet-planet collisions
        for (int i = 0; i < planets.size(); i++) {
@@ -204,6 +207,9 @@ public class StarSystem {
        //draw nebula
       nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
       nebula.draw(gc);
+      
+       //draw the sun
+       sun.drawMe(gc, cameraOffsetX, cameraOffsetY);
 
       gc.setFill(Color.WHITE);
       for (int i = 0; i < starX.size(); i++) {
@@ -230,6 +236,9 @@ public class StarSystem {
          asteroid.drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
       Player.getInstance().drawMe(gc, cameraOffsetX, cameraOffsetY);
+      
+      //for debug
+      //debugRenderSunCoordinates(gc, cameraOffsetX, cameraOffsetY);
    }
 
 
