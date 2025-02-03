@@ -44,11 +44,11 @@ public class Planet {
    }
 
     public double getRelativeX(double relativex0) {
-        return 200 + distance * Math.cos(position);
+        return Sun.WORLD_CENTER_X + distance * Math.cos(position);
     }
 
     public double getRelativeY(double relativex0) {
-        return 200 + distance * Math.sin(position);
+        return Sun.WORLD_CENTER_Y + distance * Math.sin(position);
     }
 
    

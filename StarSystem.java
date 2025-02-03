@@ -23,6 +23,7 @@ public class StarSystem {
    private int ID;
    private static int idCounter = 0;
    private StarSystemNebula nebula;
+   private Sun sun;
 
 
    // this is the location of the star systejm in the map.
@@ -105,7 +106,21 @@ public class StarSystem {
       }
         
        // planet = new Planet(Color.BLUE, 500, 30, 10, 100);
+      // Create the sun
+    sun = new Sun(); // Add this line and create a Sun field in the class
+    
+    for (int i = 0; i < numPlanets; i++) {
+        int minRadius = 80;
+        int maxRadius = 200;
+        int minDistance = 200;
+        int maxDistance = 600;
         
+        Color color = Color.color(Math.random(), Math.random(), Math.random());
+        
+        int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
+        int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
+        this.planets.add(new Planet(color, distance, 30, radius, 100));
+    }
       
       // Fill the gates arraylist
    
@@ -167,6 +182,9 @@ public class StarSystem {
       // Set the background to black
       gc.setFill(Color.BLACK);
       gc.fillRect(0, 0, 1000,1000);
+      
+       //draw the sun
+       sun.drawMe(gc, cameraOffsetX, cameraOffsetY);
 
        // Check planet-planet collisions
        for (int i = 0; i < planets.size(); i++) {
