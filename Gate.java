@@ -54,6 +54,15 @@ public class Gate {
         // Draw bounds for debugging (can remove this in production)
         gc.setStroke(Color.RED);
         gc.strokeRect(screenX, screenY, sizeX, sizeY);
+
+        // Display target system ID
+        gc.setFill(Color.CYAN);
+        gc.setFont(javafx.scene.text.Font.font(10));
+        gc.fillText(
+                "To System: " + targetSystem,
+                screenX,
+                screenY - 10
+        );
     }
 
     public boolean isCollidingWith(Player player) {
