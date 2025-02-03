@@ -165,8 +165,12 @@ public class StarSystem {
    public int getID(){
       return this.ID;
    }
-   
-   public boolean checkMissileCollisions(Point2D missilePos, double missileRadius) {
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
+    public boolean checkMissileCollisions(Point2D missilePos, double missileRadius) {
        Iterator<Asteroid> iter = asteroids.iterator();
        while (iter.hasNext()) {
            Asteroid asteroid = iter.next();

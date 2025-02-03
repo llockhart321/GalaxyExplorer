@@ -203,6 +203,12 @@ public class GalaxyMap {
         return Math.abs((coord.x * 10000 + coord.y) * 100 + systemIndex);
     }
 
+    public void initializeChunkConnections() {
+        // Call this method whenever a new system is set or discovered
+        prepareChunkConnections();
+        generateChunkConnections();
+    }
+
     // Get chunk coordinates from system coordinates
     private ChunkCoord getChunkCoordFromSystem(double x, double y) {
         int chunkX = (int) Math.floor(x / CHUNK_SIZE);
@@ -264,7 +270,7 @@ public class GalaxyMap {
                     // Current system
                     gc.setFill(Color.PURPLE);
                     system.visited = true;
-                } else if (StarSystemCache.get(system.id) != null) {
+                } else if (StarSystemCache.getInstance().get(system.id) != null) {
                     // System has been visited
                     gc.setFill(Color.WHITE);
                     system.visited = true;
@@ -456,8 +462,11 @@ public class GalaxyMap {
                     // Check and load neighboring chunks
                     checkAndLoadNeighboringChunks();
 
+                    // Trigger chunk connection generation
+                    initializeChunkConnections();
+
                     // Redraw the map
-                    //draw();
+                    draw();
                     return;
                 }
             }
@@ -504,20 +513,20 @@ public class GalaxyMap {
         }
 
         // Get or create star systems for these system data points
-        StarSystem starSystemA = StarSystemCache.get(systemA.id);
-        StarSystem starSystemB = StarSystemCache.get(systemB.id);
+        StarSystem starSystemA = StarSystemCache.getInstance().get(systemA.id);
+        StarSystem starSystemB = StarSystemCache.getInstance().get(systemB.id);
 
         // If star systems don't exist, create them
         if (starSystemA == null) {
             starSystemA = new StarSystem(gc, systemA.id);
-            StarSystemCache.add(starSystemA);
+            StarSystemCache.getInstance().add(starSystemA);
             starSystemA.setxLoc(systemA.x);
             starSystemA.setyLoc(systemA.y);
         }
 
         if (starSystemB == null) {
             starSystemB = new StarSystem(gc, systemB.id);
-            StarSystemCache.add(starSystemB);
+            StarSystemCache.getInstance().add(starSystemB);
             starSystemB.setxLoc(systemB.x);
             starSystemB.setyLoc(systemB.y);
         }
@@ -545,7 +554,7 @@ public class GalaxyMap {
         starSystemB.addGate(gateToA);
 
 
-        //System.out.println("Created chunk connection between System " + systemA.id + " and System " + systemB.id);
+        System.out.println("Created chunk connection between System " + systemA.id + " and System " + systemB.id);
     }
     public void checkAndLoadNeighboringChunks() {
         if (currentSystem == null) return;
@@ -575,6 +584,8 @@ public class GalaxyMap {
                 loadedChunks.put(neighborChunkCoord, newChunk);
             }
         }
+
+        initializeChunkConnections();
 
         // trigger a redraw of the map
         //draw();
@@ -618,7 +629,7 @@ public class GalaxyMap {
     private void createInterChunkGate(StarSystemData fromSystem, StarSystemData toSystem) {
         // This method would create a gate in the fromSystem's star system
         // that leads to the toSystem's star system
-        StarSystem fromStarSystem = StarSystemCache.get(fromSystem.id);
+        StarSystem fromStarSystem = StarSystemCache.getInstance().get(fromSystem.id);
 
         if (fromStarSystem != null) {
             // Create a gate in the fromStarSystem that leads to toSystem

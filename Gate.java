@@ -112,13 +112,13 @@ public class Gate {
     StarSystem newSys;
     
     //load new system
-    if (StarSystemCache.get(targetSystem) == null) {
+    if (StarSystemCache.getInstance().get(targetSystem) == null) {
         //create this new system.
         newSys = new StarSystem(gc, targetSystem);
-        StarSystemCache.add(newSys);
+        StarSystemCache.getInstance().add(newSys);
         GalaxyMap.getInstance().discoverChunkFromSystemCoords(newSys.getxLoc(), newSys.getyLoc());
     } else {
-        newSys = StarSystemCache.get(targetSystem);
+        newSys = StarSystemCache.getInstance().get(targetSystem);
     }
     
     Player player = Player.getInstance();
