@@ -186,7 +186,7 @@ public class Asteroid {
             Point2D partWorldPos = asteroidCenter.add(part.getPosition());
             double collisionDist = part.getRadius() + Player.getBounds().getRadius();
 
-            if (partWorldPos.distance(playerCenter) < collisionDist) {
+            if (partWorldPos.distance(playerCenter) < collisionDist) { //if the player position overlaps asteroid 
                 // Calculate bounce direction
                 Point2D bounceDir = partWorldPos.subtract(playerCenter).normalize();
 
