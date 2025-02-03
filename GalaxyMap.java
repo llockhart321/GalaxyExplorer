@@ -538,7 +538,8 @@ public class GalaxyMap {
                 systemB.id,
                 systemA.x % CHUNK_SIZE + 50,  // Offset from system's left edge
                 systemA.y % CHUNK_SIZE + 50,  // Offset from system's top edge
-                starSystemA
+                starSystemA,
+                270
         );
 
         Gate gateToA = new Gate(
@@ -546,7 +547,8 @@ public class GalaxyMap {
                 systemA.id,
                 systemB.x % CHUNK_SIZE + 50,  // Offset from system's left edge
                 systemB.y % CHUNK_SIZE + 50,  // Offset from system's top edge
-                starSystemB
+                starSystemB,
+                270
         );
 
         // Add gates to respective star systems
@@ -638,7 +640,8 @@ public class GalaxyMap {
                     toSystem.id,  // target system ID
                     fromSystem.x % CHUNK_SIZE,  // x position within the system
                     fromSystem.y % CHUNK_SIZE,  // y position within the system
-                    fromStarSystem  // parent star system
+                    fromStarSystem,  // parent star system
+                    270
             );
 
             // Add the gate to the star system
