@@ -112,8 +112,8 @@ public class StarSystem {
     for (int i = 0; i < numPlanets; i++) {
         int minRadius = 80;
         int maxRadius = 200;
-        int minDistance = 200;
-        int maxDistance = 600;
+        int minDistance = 600;
+        int maxDistance = 1000;
         
         Color color = Color.color(Math.random(), Math.random(), Math.random());
         

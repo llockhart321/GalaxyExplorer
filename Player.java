@@ -30,12 +30,8 @@ public class Player {
    // Private constructor
    private Player() {
       // Set player on screen
-      /*x = 380;
+      x = 380;
       y = 220;
-      bounds.setCenterX(x + radius);
-      bounds.setCenterY(y + radius);*/
-      x = Sun.WORLD_CENTER_X+100;
-      y = Sun.WORLD_CENTER_Y+100;
       bounds.setCenterX(x + radius);
       bounds.setCenterY(y + radius);
    }
