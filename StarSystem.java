@@ -252,5 +252,10 @@ public class StarSystem {
       this.yLoc = yLoc;
    }
 
-
+    public void addGate(Gate gate) {
+        if (this.gates == null) {
+            this.gates = new ArrayList<>();
+        }
+        this.gates.add(gate);
+    }
 }

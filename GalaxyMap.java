@@ -333,7 +333,7 @@ public class GalaxyMap {
         if (!discoveredChunks.contains(newChunk)) {
             discoveredChunks.add(newChunk);
             loadedChunks.put(newChunk, new Chunk(newChunk));
-            draw();
+            //draw();
         }
     }
 
@@ -443,13 +443,21 @@ public class GalaxyMap {
     }
 
     // Method to update current system
-    public  void setCurrentSystem(int systemId) {
+    public void setCurrentSystem(int systemId) {
         // Find the system with the given ID
         for (Chunk chunk : loadedChunks.values()) {
             for (StarSystemData system : chunk.systems) {
                 if (system.id == systemId) {
                     currentSystem = system;
-                    draw();
+
+                    // Mark the system as visited
+                    system.visited = true;
+
+                    // Check and load neighboring chunks
+                    checkAndLoadNeighboringChunks();
+
+                    // Redraw the map
+                    //draw();
                     return;
                 }
             }
@@ -486,8 +494,153 @@ public class GalaxyMap {
     }
 
     private void createChunkConnection(StarSystemData systemA, StarSystemData systemB) {
-        // Placeholder for gate creation logic
-        // You'll need to implement this based on your existing Gate creation mechanism
-        // Ensure only one connection is created between chunks
+        // Ensure systems are from different chunks
+        ChunkCoord chunkA = getChunkCoordFromSystem(systemA.x, systemA.y);
+        ChunkCoord chunkB = getChunkCoordFromSystem(systemB.x, systemB.y);
+
+        // Verify they are actually from different chunks
+        if (chunkA.equals(chunkB)) {
+            return; // No need to create connection within same chunk
+        }
+
+        // Get or create star systems for these system data points
+        StarSystem starSystemA = StarSystemCache.get(systemA.id);
+        StarSystem starSystemB = StarSystemCache.get(systemB.id);
+
+        // If star systems don't exist, create them
+        if (starSystemA == null) {
+            starSystemA = new StarSystem(gc, systemA.id);
+            StarSystemCache.add(starSystemA);
+            starSystemA.setxLoc(systemA.x);
+            starSystemA.setyLoc(systemA.y);
+        }
+
+        if (starSystemB == null) {
+            starSystemB = new StarSystem(gc, systemB.id);
+            StarSystemCache.add(starSystemB);
+            starSystemB.setxLoc(systemB.x);
+            starSystemB.setyLoc(systemB.y);
+        }
+
+        // Create gates in both systems pointing to each other
+        // Use a fixed position near the edge of the system for the gate
+        Gate gateToB = new Gate(
+                0,  // direction (can be refined later)
+                systemB.id,
+                systemA.x % CHUNK_SIZE + 50,  // Offset from system's left edge
+                systemA.y % CHUNK_SIZE + 50,  // Offset from system's top edge
+                starSystemA
+        );
+
+        Gate gateToA = new Gate(
+                0,  // direction (can be refined later)
+                systemA.id,
+                systemB.x % CHUNK_SIZE + 50,  // Offset from system's left edge
+                systemB.y % CHUNK_SIZE + 50,  // Offset from system's top edge
+                starSystemB
+        );
+
+        // Add gates to respective star systems
+        starSystemA.addGate(gateToB);
+        starSystemB.addGate(gateToA);
+
+
+        //System.out.println("Created chunk connection between System " + systemA.id + " and System " + systemB.id);
+    }
+    public void checkAndLoadNeighboringChunks() {
+        if (currentSystem == null) return;
+
+        // Get current chunk coordinates
+        ChunkCoord currentChunkCoord = getChunkCoordFromSystem(currentSystem.x, currentSystem.y);
+
+        // Directions to check: top-left, top, top-right, left, right, bottom-left, bottom, bottom-right
+        int[][] directions = {
+                {-1, -1}, {0, -1}, {1, -1},
+                {-1, 0},           {1, 0},
+                {-1, 1}, {0, 1}, {1, 1}
+        };
+
+        // Check and load neighboring chunks
+        for (int[] dir : directions) {
+            ChunkCoord neighborChunkCoord = new ChunkCoord(
+                    currentChunkCoord.x + dir[0],
+                    currentChunkCoord.y + dir[1]
+            );
+
+            // Only load if not already discovered
+            if (!discoveredChunks.contains(neighborChunkCoord)) {
+                // Create and add new chunk
+                Chunk newChunk = new Chunk(neighborChunkCoord);
+                discoveredChunks.add(neighborChunkCoord);
+                loadedChunks.put(neighborChunkCoord, newChunk);
+            }
+        }
+
+        // trigger a redraw of the map
+        //draw();
+    }
+
+    private void generateChunkConnections() {
+        // Iterate through discovered chunks
+        for (ChunkCoord currentChunkCoord : discoveredChunks) {
+            Chunk currentChunk = loadedChunks.get(currentChunkCoord);
+
+            // Directions to check: top-left, top, top-right, left, right, bottom-left, bottom, bottom-right
+            int[][] directions = {
+                    {-1, -1}, {0, -1}, {1, -1},
+                    {-1, 0},           {1, 0},
+                    {-1, 1}, {0, 1}, {1, 1}
+            };
+
+            for (int[] dir : directions) {
+                ChunkCoord neighborChunkCoord = new ChunkCoord(
+                        currentChunkCoord.x + dir[0],
+                        currentChunkCoord.y + dir[1]
+                );
+
+                // Check if neighbor chunk is discovered
+                if (discoveredChunks.contains(neighborChunkCoord)) {
+                    Chunk neighborChunk = loadedChunks.get(neighborChunkCoord);
+
+                    // Find systems near the shared edge
+                    StarSystemData currentEdgeSystem = findSystemNearestToEdge(currentChunk, getEdgeForDirection(dir));
+                    StarSystemData neighborEdgeSystem = findSystemNearestToEdge(neighborChunk, getOppositeEdge(getEdgeForDirection(dir)));
+
+                    // Create a gate between these systems
+                    if (currentEdgeSystem != null && neighborEdgeSystem != null) {
+                        createInterChunkGate(currentEdgeSystem, neighborEdgeSystem);
+                    }
+                }
+            }
+        }
+    }
+
+    private void createInterChunkGate(StarSystemData fromSystem, StarSystemData toSystem) {
+        // This method would create a gate in the fromSystem's star system
+        // that leads to the toSystem's star system
+        StarSystem fromStarSystem = StarSystemCache.get(fromSystem.id);
+
+        if (fromStarSystem != null) {
+            // Create a gate in the fromStarSystem that leads to toSystem
+            Gate interChunkGate = new Gate(
+                    0,  // direction (can be refined)
+                    toSystem.id,  // target system ID
+                    fromSystem.x % CHUNK_SIZE,  // x position within the system
+                    fromSystem.y % CHUNK_SIZE,  // y position within the system
+                    fromStarSystem  // parent star system
+            );
+
+            // Add the gate to the star system
+            fromStarSystem.addGate(interChunkGate);
+        }
+    }
+
+    private String getEdgeForDirection(int[] direction) {
+        if (direction[0] == -1 && direction[1] == 0) return "left";
+        if (direction[0] == 1 && direction[1] == 0) return "right";
+        if (direction[0] == 0 && direction[1] == -1) return "top";
+        if (direction[0] == 0 && direction[1] == 1) return "bottom";
+        // Add more specific handling for diagonal directions if needed
+        return "unknown";
     }
 }
