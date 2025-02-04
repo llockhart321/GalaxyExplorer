@@ -138,11 +138,11 @@ public class Asteroid {
     }
 
     public double getRelativeX() {
-        return 400 + centerDistance * Math.cos(orbitalPosition);
+        return Sun.WORLD_CENTER_X + centerDistance * Math.cos(orbitalPosition);
     }
 
     public double getRelativeY() {
-        return 225 + centerDistance * Math.sin(orbitalPosition);
+        return Sun.WORLD_CENTER_Y + centerDistance * Math.cos(orbitalPosition);
     }
 
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
