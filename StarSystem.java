@@ -23,6 +23,7 @@ public class StarSystem {
    private int ID;
    private static int idCounter = 0;
    private StarSystemNebula nebula;
+   private Sun sun;
 
 
    // this is the location of the star systejm in the map.
@@ -89,7 +90,7 @@ public class StarSystem {
       for (int i = 0; i < numGates; i++) {
                      //still need to get accurate next system. rn im just doing +1
                               // this rand allows for gates to spawn in orbit path. this needs to be fixed.
-         this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400), this));
+         this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400), this, 90));
       }
       
       int numStars = 100000; // Number of stars to draw
@@ -105,7 +106,21 @@ public class StarSystem {
       }
         
        // planet = new Planet(Color.BLUE, 500, 30, 10, 100);
+      // Create the sun
+    sun = new Sun(); // Add this line and create a Sun field in the class
+    
+    for (int i = 0; i < numPlanets; i++) {
+        int minRadius = 80;
+        int maxRadius = 200;
+        int minDistance = 600;
+        int maxDistance = 1000;
         
+        Color color = Color.color(Math.random(), Math.random(), Math.random());
+        
+        int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
+        int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
+        this.planets.add(new Planet(color, distance, 30, radius, 100));
+    }
       
       // Fill the gates arraylist
    
@@ -114,6 +129,10 @@ public class StarSystem {
    public List<Planet> getPlanets() {
        return this.planets;
    }
+   public void debugRenderSunCoordinates(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
+    System.out.println("Sun Center X: " + Sun.WORLD_CENTER_X);
+    System.out.println("Sun Center Y: " + Sun.WORLD_CENTER_Y);
+}
    
    public void checkPlayerPlanetCollisions(Player player) {
        // Check against each planet
@@ -146,8 +165,12 @@ public class StarSystem {
    public int getID(){
       return this.ID;
    }
-   
-   public boolean checkMissileCollisions(Point2D missilePos, double missileRadius) {
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
+    public boolean checkMissileCollisions(Point2D missilePos, double missileRadius) {
        Iterator<Asteroid> iter = asteroids.iterator();
        while (iter.hasNext()) {
            Asteroid asteroid = iter.next();
@@ -167,6 +190,8 @@ public class StarSystem {
       // Set the background to black
       gc.setFill(Color.BLACK);
       gc.fillRect(0, 0, 1000,1000);
+      
+      
 
        // Check planet-planet collisions
        for (int i = 0; i < planets.size(); i++) {
@@ -186,6 +211,9 @@ public class StarSystem {
        //draw nebula
       nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
       nebula.draw(gc);
+      
+       //draw the sun
+       sun.drawMe(gc, cameraOffsetX, cameraOffsetY);
 
       gc.setFill(Color.WHITE);
       for (int i = 0; i < starX.size(); i++) {
@@ -212,6 +240,9 @@ public class StarSystem {
          asteroid.drawMe(gc, cameraOffsetX, cameraOffsetY);
       }
       Player.getInstance().drawMe(gc, cameraOffsetX, cameraOffsetY);
+      
+      //for debug
+      //debugRenderSunCoordinates(gc, cameraOffsetX, cameraOffsetY);
    }
 
 
@@ -252,5 +283,10 @@ public class StarSystem {
       this.yLoc = yLoc;
    }
 
-
+    public void addGate(Gate gate) {
+        if (this.gates == null) {
+            this.gates = new ArrayList<>();
+        }
+        this.gates.add(gate);
+    }
 }
