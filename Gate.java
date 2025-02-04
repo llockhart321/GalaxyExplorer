@@ -45,7 +45,7 @@ public class Gate {
          bounds.setHeight(sizeY);
       }
    }
-    
+    /*
    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
     // Draw at screen position (world position - camera offset)
       double screenX = x - cameraOffsetX;
@@ -105,6 +105,86 @@ public class Gate {
          gc.strokeLine(x + 30, y + 40 - size * 0.5, x + 60 - size, y);
       }
    }
+
+     */
+
+
+
+   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
+      // Calculate screen position
+      double screenX = x - cameraOffsetX;
+      double screenY = y - cameraOffsetY;
+      ticker++;
+
+      gc.setFill(Color.rgb(173, 216, 230, 0.6));
+      // Update polygon coordinates to use screen position
+      double[] xAr = {screenX, screenX + 30, screenX + 60, screenX + 60, screenX};
+      double[] yAr = {screenY, screenY + 40, screenY, screenY + 50, screenY + 50};
+
+      pulseSize = 1 + Math.sin(ticker / 30.0) * 0.2;
+
+      gc.save();
+      // Update rotation center to use screen coordinates
+      double centerX = screenX + 30;
+      double centerY = screenY + 25;
+      gc.translate(centerX, centerY);
+      gc.rotate(rotation);
+      gc.translate(-centerX, -centerY);
+
+      gc.setFill(Color.rgb(173, 216, 230, 0.5 + Math.abs(Math.sin(ticker / 30.0)) * 0.4));
+      gc.fillPolygon(xAr, yAr, 5);
+
+      gc.setFill(Color.rgb(173, 216, 230, 0.8));
+      for (int i = 0; i < 3; i++) {
+         double offsetX = Math.sin(ticker / 20.0 + i) * 3;
+         double offsetY = Math.cos(ticker / 20.0 + i) * 3;
+         gc.fillPolygon(
+                 new double[]{screenX + offsetX, screenX + 30 + offsetX, screenX + 60 + offsetX, screenX + 60, screenX + offsetX},
+                 new double[]{screenY + offsetY, screenY + 40 + offsetY, screenY + offsetY, screenY + 50 + offsetY, screenY + 50 + offsetY},
+                 5
+         );
+      }
+
+      for (int i = 0; i <= ticker / 100; i++) {
+         if (i % 10 == 0) {
+            drawRays(gc, ticker / 100 - i, screenX, screenY);  // Pass screen coordinates to drawRays
+         }
+      }
+
+      if (ticker % 500 == 0) {
+         gc.setFill(Color.color(Math.random(), Math.random(), Math.random(), 0.8));
+         gc.fillPolygon(xAr, yAr, 5);
+      }
+
+      gc.restore();
+
+      // Debug rectangle (already using screen coordinates)
+      gc.setStroke(Color.RED);
+      gc.strokeRect(screenX, screenY, sizeX, sizeY);
+
+      // Label (already using screen coordinates)
+      gc.setFill(Color.CYAN);
+      gc.setFont(javafx.scene.text.Font.font(10));
+      gc.fillText(
+              "To System: " + targetSystem,
+              screenX,
+              screenY - 10
+      );
+   }
+
+   private void drawRays(GraphicsContext gc, int size, double screenX, double screenY) {
+      if (size < 60) {
+         double r = Math.sin(ticker / 30.0 + size * 0.1) * 0.5 + 0.5;
+         double g = Math.cos(ticker / 30.0 + size * 0.1) * 0.5 + 0.5;
+         double b = Math.sin(ticker / 40.0 + size * 0.1) * 0.5 + 0.5;
+         gc.setStroke(Color.color(r, g, b));
+         gc.setLineWidth(2);
+         gc.strokeLine(screenX + size, screenY, screenX + 30, screenY + 40 - size * 0.5);
+         gc.strokeLine(screenX + 30, screenY + 40 - size * 0.5, screenX + 60 - size, screenY);
+      }
+   }
+
+
 
    public boolean isCollidingWith(Player player) {
         // Create a temporary rectangle for the player's current position
