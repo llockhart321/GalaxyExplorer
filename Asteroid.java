@@ -22,15 +22,14 @@ public class Asteroid {
         // Create 3-5 overlapping parts
         Random rand = new Random();
         int numParts = rand.nextInt(3) + 3;
+        double partRadius = baseRadius;
 
         for (int i = 0; i < numParts; i++) {
             double angle = 2 * Math.PI * i / numParts;
-            double partRadius = baseRadius * (0.6 + rand.nextDouble() * 0.4);
-            double offset = baseRadius * 0.7; // Overlap distance
-
+            partRadius -= 0.4;
             Point2D partPos = new Point2D(
-                    Math.cos(angle) * offset,
-                    Math.sin(angle) * offset
+                    Math.cos(angle),
+                    Math.sin(angle)
             );
 
             parts.add(new AsteroidPart(partPos, partRadius, 0));
@@ -142,7 +141,7 @@ public class Asteroid {
     }
 
     public double getRelativeY() {
-        return Sun.WORLD_CENTER_Y + centerDistance * Math.cos(orbitalPosition);
+        return Sun.WORLD_CENTER_Y + centerDistance * Math.sin(orbitalPosition);
     }
 
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
@@ -157,7 +156,7 @@ public class Asteroid {
             // Vary color slightly based on group ID for visualization
             Color partColor = isIntact ? Color.BURLYWOOD :
                     Color.hsb(30 + part.getGroupId() * 20, 0.3, 0.6);
-
+                    
             gc.setFill(partColor);
             gc.fillOval(
                     partPos.getX() - part.getRadius(),
@@ -165,6 +164,13 @@ public class Asteroid {
                     part.getRadius() * 2,
                     part.getRadius() * 2
             );
+            
+            gc.setStroke(Color.BLACK);
+            gc.strokeOval(
+                    partPos.getX() - part.getRadius(),
+                    partPos.getY() - part.getRadius(),
+                    part.getRadius() * 2,
+                    part.getRadius() * 2);
         }
     }
 
