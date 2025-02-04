@@ -466,7 +466,7 @@ public class GalaxyMap {
                     initializeChunkConnections();
 
                     // Redraw the map
-                    draw();
+                    //draw();
                     return;
                 }
             }

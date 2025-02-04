@@ -7,6 +7,7 @@ import javafx.stage.*;
 
 
 public class Main extends Application {
+   private static boolean isMapOpen = false;
    public void start(Stage primaryStage) {
       // Create a FlowPane
       FlowPane root = new FlowPane();
@@ -26,7 +27,9 @@ public class Main extends Application {
       scene.setOnKeyPressed(new KeyListenerDown());
       scene.setOnKeyReleased(new KeyListenerUp());
       scene.setOnMouseClicked(event -> {
-          MissileSystem.getInstance().shoot(event.getX(), event.getY());
+         if(!isMapOpen) {
+            MissileSystem.getInstance().shoot(event.getX(), event.getY());
+         }
       });
       
       //set player start system
@@ -52,5 +55,9 @@ public class Main extends Application {
 
    public static void main(String[] args) {
       launch(args);
+   }
+
+   public static void mapState(){
+      isMapOpen = !isMapOpen;
    }
 }
