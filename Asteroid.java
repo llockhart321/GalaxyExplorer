@@ -2,7 +2,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.geometry.Point2D;
 import java.util.*;
-
 public class Asteroid {
     private List<AsteroidPart> parts;
     private double centerDistance;
@@ -11,46 +10,36 @@ public class Asteroid {
     private boolean isIntact;
     private static final double ORBITAL_FORCE = 0.1;
     private static final double IMPACT_FORCE = 5.0;
-
     public Asteroid(double distance, double position, double baseRadius, int speed) {
         this.centerDistance = distance;
         this.orbitalPosition = position;
         this.orbitalSpeed = speed;
         this.isIntact = true;
         this.parts = new ArrayList<>();
-
         // Create 3-5 overlapping parts
         Random rand = new Random();
         int numParts = rand.nextInt(3) + 3;
-
         for (int i = 0; i < numParts; i++) {
             double angle = 2 * Math.PI * i / numParts;
             double partRadius = baseRadius * (0.6 + rand.nextDouble() * 0.4);
             double offset = baseRadius * 0.7; // Overlap distance
-
             Point2D partPos = new Point2D(
                     Math.cos(angle) * offset,
                     Math.sin(angle) * offset
             );
-
             parts.add(new AsteroidPart(partPos, partRadius, 0));
         }
     }
-
     public boolean checkMissileCollision(Point2D missilePos, double missileRadius) {
         Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
-
         for (Iterator<AsteroidPart> iterator = parts.iterator(); iterator.hasNext(); ) {
             AsteroidPart part = iterator.next();
             Point2D partWorldPos = asteroidCenter.add(part.getPosition());
-
             if (partWorldPos.distance(missilePos) < (part.getRadius() + missileRadius)) {
                 // Calculate impact direction
                 Point2D impactDir = partWorldPos.subtract(missilePos).normalize();
-
                 // Remove the hit part
                 iterator.remove();
-
                 // If asteroid was intact, apply impact force and disable orbital motion
                 if (isIntact) {
                     isIntact = false;
@@ -58,14 +47,12 @@ public class Asteroid {
                         Point2D partPos = remainingPart.getPosition();
                         double distance = partPos.distance(part.getPosition());
                         double forceFactor = 1.0 / (1.0 + distance);
-
                         // Calculate force direction away from the impact
                         Point2D forceDir = partPos.subtract(part.getPosition()).normalize();
                         Point2D impulse = forceDir.multiply(IMPACT_FORCE * forceFactor);
                         remainingPart.setVelocity(remainingPart.getVelocity().add(impulse));
                     }
                 }
-
                 // Recalculate groups after impact
                 updateGroups();
                 return true;
@@ -73,25 +60,14 @@ public class Asteroid {
         }
         return false;
     }
-
-
-
     public void applyCollisionForce(double force){
-
-
     }
-
-
-
-
     private void updateGroups() {
         if (parts.isEmpty()) return;
-
         // Reset all group IDs
         for (AsteroidPart part : parts) {
             part.setGroupId(-1);
         }
-
         // Assign new groups using flood fill
         int currentGroup = 0;
         for (AsteroidPart part : parts) {
@@ -100,22 +76,18 @@ public class Asteroid {
             }
         }
     }
-
     private void assignGroup(AsteroidPart part, int groupId) {
         part.setGroupId(groupId);
-
         for (AsteroidPart other : parts) {
             if (other.getGroupId() == -1 && isConnected(part, other)) {
                 assignGroup(other, groupId);
             }
         }
     }
-
     private boolean isConnected(AsteroidPart part1, AsteroidPart part2) {
         return part1.getPosition().distance(part2.getPosition()) <
                 (part1.getRadius() + part2.getRadius()) * 0.8; // 0.8 for overlap threshold
     }
-
     private void updatePosition() {
         if (isIntact) {
             // Update orbital position for intact asteroids
@@ -128,7 +100,6 @@ public class Asteroid {
             for (AsteroidPart part : parts) {
                 Point2D pos = part.getPosition();
                 Point2D vel = part.getVelocity();
-
                 // Update position only
                 pos = pos.add(vel);
                 part.setPosition(pos);
@@ -136,28 +107,22 @@ public class Asteroid {
             }
         }
     }
-
     public double getRelativeX() {
         return Sun.WORLD_CENTER_X + centerDistance * Math.cos(orbitalPosition);
     }
-
+    
     public double getRelativeY() {
-        return Sun.WORLD_CENTER_Y + centerDistance * Math.cos(orbitalPosition);
+        return Sun.WORLD_CENTER_Y + centerDistance * Math.sin(orbitalPosition);
     }
-
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
         updatePosition();
-
         Point2D center = new Point2D(getRelativeX() - cameraOffsetX, getRelativeY() - cameraOffsetY);
-
         // Draw each part
         for (AsteroidPart part : parts) {
             Point2D partPos = center.add(part.getPosition());
-
             // Vary color slightly based on group ID for visualization
             Color partColor = isIntact ? Color.BURLYWOOD :
                     Color.hsb(30 + part.getGroupId() * 20, 0.3, 0.6);
-
             gc.setFill(partColor);
             gc.fillOval(
                     partPos.getX() - part.getRadius(),
@@ -167,56 +132,44 @@ public class Asteroid {
             );
         }
     }
-
     public boolean isEmpty() {
         return parts.isEmpty();
     }
-
     public void checkPlayerCollision(Player player) {
         if (!isIntact) return; // Only check collisions for intact asteroids
-
         Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
         Point2D playerCenter = new Point2D(
                 player.getX() + Player.getBounds().getRadius(),
                 player.getY() + Player.getBounds().getRadius()
         );
-
         // Check if any part of the asteroid collides with the player
         for (AsteroidPart part : parts) {
             Point2D partWorldPos = asteroidCenter.add(part.getPosition());
             double collisionDist = part.getRadius() + Player.getBounds().getRadius();
-
             if (partWorldPos.distance(playerCenter) < collisionDist) { //if the player position overlaps asteroid 
                 // Calculate bounce direction
                 Point2D bounceDir = partWorldPos.subtract(playerCenter).normalize();
-
                 // Break apart the asteroid
                 /*isIntact = false;
-
                 // Apply forces to asteroid parts
                 for (AsteroidPart remainingPart : parts) {
                     Point2D partPos = remainingPart.getPosition();
                     double distance = partPos.distance(part.getPosition());
                     double forceFactor = 1.0 / (1.0 + distance);
-
                     // Calculate force direction relative to impact point
                     Point2D forceDir = partPos.subtract(part.getPosition()).normalize();
                     Point2D impulse = forceDir.multiply(IMPACT_FORCE * 0.5 * forceFactor); // Reduced force for gentler bounce
                     remainingPart.setVelocity(remainingPart.getVelocity().add(impulse));
                 }
-
                 // Update asteroid part groups
                 updateGroups();
-
                 // Could add player bounce response here if desired
                 player.moveXBy(bounceDir.getX() * 5);
                 player.moveYBy(bounceDir.getY() * 5);*/
-
                 break; // Exit after first collision
             }
         }
     }
-
     public void applyCollisionForce(Point2D force) {
         isIntact = false;
         for (AsteroidPart part : parts) {
@@ -224,4 +177,4 @@ public class Asteroid {
             part.setVelocity(currentVel.add(force));
         }
     }
-}
+ }

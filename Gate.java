@@ -5,6 +5,7 @@ import javafx.scene.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
+import java.util.List;
 import javafx.stage.*;
 import java.util.Random;
 
@@ -168,7 +169,7 @@ public class Gate {
       
    }*/
    
-   public void activate(GraphicsContext gc) {
+   /*public void activate(GraphicsContext gc) {
       StarSystem newSys;
     
     //load new system
@@ -246,7 +247,126 @@ public class Gate {
       }
    
    
-   }
-
+   }*/
+   
+     public void activate(GraphicsContext gc) {
+    StarSystem newSys;
+    StarSystem oldSys = this.system;  // Store the original system
+    
+    // Load new system
+    if (StarSystemCache.getInstance().get(targetSystem) == null) {
+        // Create this new system
+        newSys = new StarSystem(gc, targetSystem);
+        StarSystemCache.getInstance().add(newSys);
+        GalaxyMap.getInstance().discoverChunkFromSystemCoords(newSys.getxLoc(), newSys.getyLoc());
+    } else {
+        newSys = StarSystemCache.getInstance().get(targetSystem);
+    }
+    
+    Player player = Player.getInstance();
+    
+    // Find the corresponding gate in the new system
+    Gate destinationGate = null;
+    List<Gate> systemGates = newSys.getGates();
+    
+    // Debug print
+    System.out.println("Looking for gate connecting from system " + targetSystem + " back to system " + oldSys.getID());
+    System.out.println("Number of gates in new system: " + systemGates.size());
+    
+    for (Gate gate : systemGates) {
+        System.out.println("Checking gate with target: " + gate.targetSystem);
+        if (gate.targetSystem == oldSys.getID()) {
+            destinationGate = gate;
+            System.out.println("Found matching gate!");
+            break;
+        }
+    }
+    
+    if (destinationGate != null) {
+        // Calculate spawn position in front of the destination gate
+        double spawnOffsetDistance = 70; // Distance to spawn from the gate
+        
+        // Calculate spawn position based on gate's rotation
+        double spawnX = destinationGate.x;
+        double spawnY = destinationGate.y;
+        
+        System.out.println("Destination gate position: " + spawnX + ", " + spawnY);
+        System.out.println("Gate rotation: " + destinationGate.rotation);
+        
+        // Adjust spawn position based on rotation
+        switch (destinationGate.rotation) {
+            case 0: // Gate facing right
+                spawnX += spawnOffsetDistance;
+                break;
+            case 90: // Gate facing down
+                spawnY += spawnOffsetDistance;
+                break;
+            case 180: // Gate facing left
+                spawnX -= spawnOffsetDistance;
+                break;
+            case 270: // Gate facing up
+                spawnY -= spawnOffsetDistance;
+                break;
+        }
+        
+        // Set player position
+        player.setX(spawnX);
+        player.setY(spawnY);
+        System.out.println("Set player position to: " + spawnX + ", " + spawnY);
+        
+        // Check if spawn position is safe
+        boolean isColliding = false;
+        for (Planet planet : newSys.getPlanets()) {
+            if (planet.isCollidingWith(player)) {
+                isColliding = true;
+                break;
+            }
+        }
+        
+        // If collision detected, try alternative positions
+        if (isColliding) {
+            System.out.println("Initial spawn position unsafe, trying alternatives");
+            double[][] offsets = {
+                {spawnOffsetDistance * 1.5, 0},
+                {-spawnOffsetDistance * 1.5, 0},
+                {0, spawnOffsetDistance * 1.5},
+                {0, -spawnOffsetDistance * 1.5}
+            };
+            
+            for (double[] offset : offsets) {
+                player.setX(destinationGate.x + offset[0]);
+                player.setY(destinationGate.y + offset[1]);
+                
+                isColliding = false;
+                for (Planet planet : newSys.getPlanets()) {
+                    if (planet.isCollidingWith(player)) {
+                        isColliding = true;
+                        break;
+                    }
+                }
+                
+                if (!isColliding) {
+                    System.out.println("Found safe alternative position");
+                    break;
+                }
+            }
+            
+            // If still no safe spot found, use the original fallback position
+            if (isColliding) {
+                System.out.println("No safe position found, using fallback");
+                player.setX(800);
+                player.setY(800);
+            }
+        }
+    } else {
+        System.out.println("No matching gate found in new system");
+        // Fallback spawn position if destination gate not found
+        player.setX(800);
+        player.setY(800);
+    }
+    
+    // Set the system after positioning the player
+    player.setSystem(newSys);
+}
    
 }
