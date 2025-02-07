@@ -86,12 +86,13 @@ public class StarSystem {
          System.out.println("new asteroid");
       }
       
-      //add gates
-      for (int i = 0; i < numGates; i++) {
-                     //still need to get accurate next system. rn im just doing +1
-                              // this rand allows for gates to spawn in orbit path. this needs to be fixed.
-         this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400), this, 90));
+      //Random rand = new Random();
+      // First gate connects to previous system (ID - 1)
+      if (ID > 0) {
+          this.gates.add(new Gate(0, ID-1, rand.nextInt(700), rand.nextInt(400), this, 90));
       }
+      // Second gate connects to next system (ID + 1)
+      this.gates.add(new Gate(0, ID+1, rand.nextInt(700), rand.nextInt(400), this, 90));
       
       int numStars = 100000; // Number of stars to draw
       for (int i = 0; i < numStars; i++) {
@@ -128,6 +129,9 @@ public class StarSystem {
    }
    public List<Planet> getPlanets() {
        return this.planets;
+   }
+   public List<Gate> getGates() {
+       return this.gates;
    }
    public void debugRenderSunCoordinates(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
     System.out.println("Sun Center X: " + Sun.WORLD_CENTER_X);
@@ -209,7 +213,7 @@ public class StarSystem {
        checkPlayerAsteroidCollisions(Player.getInstance());
 
        //draw nebula
-      nebula.setOffset(Player.getInstance().getX() - cameraOffsetX, Player.getInstance().getY() - cameraOffsetY);
+      nebula.setOffset(cameraOffsetX, cameraOffsetY);
       nebula.draw(gc);
       
        //draw the sun
