@@ -7,8 +7,8 @@ public class Camera {
    private Player p;
 
    // World bounds (accounting for player circle radius)
-   private final int WORLD_WIDTH = 4000;
-   private final int WORLD_HEIGHT = 2250;
+   //private final int WORLD_WIDTH = 4000;
+   //private final int WORLD_HEIGHT = 2250;
 
    // Screen bounds - accounting for player radius for smoother movement
    private final int LEFT_BOUND = 200;
@@ -41,25 +41,15 @@ public class Camera {
 
       // Prevent player from leaving world bounds
       double playerRadius = Player.getBounds().getRadius();
-      double maxPlayerX = WORLD_WIDTH - (playerRadius * 2);
-      double maxPlayerY = WORLD_HEIGHT - (playerRadius * 2);
+      //double maxPlayerX = WORLD_WIDTH - (playerRadius * 2);
+      //double maxPlayerY = WORLD_HEIGHT - (playerRadius * 2);
 
       //double[] effectOffsets = effects.getEffectOffsets(playerCenterX, playerCenterY, WORLD_WIDTH, WORLD_HEIGHT);
       //mapCenterOffsetX += effectOffsets[0];
       //amapCenterOffsetY += effectOffsets[1];
 
 
-      if (p.getX() < 0) {
-         p.setX(0);
-      } else if (p.getX() > maxPlayerX) {
-         p.setX(maxPlayerX);
-      }
 
-      if (p.getY() < 0) {
-         p.setY(0);
-      } else if (p.getY() > maxPlayerY) {
-         p.setY(maxPlayerY);
-      }
 
       // Update camera based on player position
       double playerX = p.getX();
@@ -80,8 +70,8 @@ public class Camera {
       }
 
       // Clamp camera position
-      mapCenterOffsetX = clamp(mapCenterOffsetX, 0, WORLD_WIDTH - 800);
-      mapCenterOffsetY = clamp(mapCenterOffsetY, 0, WORLD_HEIGHT - 450);
+      //mapCenterOffsetX = clamp(mapCenterOffsetX, 0, WORLD_WIDTH - 800);
+      //mapCenterOffsetY = clamp(mapCenterOffsetY, 0, WORLD_HEIGHT - 450);
 
 
       gc.setStroke(Color.RED);

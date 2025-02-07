@@ -33,11 +33,10 @@ public class Main extends Application {
       });
       
       //set player start system
+
       StarSystem startSystem = new StarSystem(gc, -1);
       StarSystemCache.getInstance().add(startSystem);
 
-      
-      
       
       // Set up Animation
       AnimationHandler ah = new AnimationHandler(gc);
