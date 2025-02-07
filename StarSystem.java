@@ -118,7 +118,7 @@ public class StarSystem {
         Color color = Color.color(Math.random(), Math.random(), Math.random());
         
         int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
-        int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
+        int distance = rand.nextInt(maxDistance) + minDistance;
         this.planets.add(new Planet(color, distance, 30, radius, 100));
     }
       
