@@ -1,47 +1,46 @@
 import javafx.geometry.Point2D;
-import javafx.scene.paint.*;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.paint.*;
 import javafx.scene.shape.Circle;
+
 public class Planet {
-   // Variable for the color of the planet
-   private Color color;
-   // Variables distance away from the central star and the normal-circle-degree position in relation to the central star
-   private double distance, position;
-   // Variables for the size of the planet and the speed at which it travels
-   private int radius, speed, size;
-
-   //bounds for collision
-   private Circle bounds;
-   // Constructor
-   public Planet (Color color, double distance, double position, int radius, int speed) {
-      this.color = color;
-      this.distance = distance;
-      this.position = position;
-      this.radius = radius;
-      this.speed = speed;
-       double x = getRelativeX(500) - radius; // Adjust for the planet's radius
-       double y = getRelativeY(500) - radius; // Adjust for the planet's radius
-       this.bounds = new Circle(x, y, radius);
-       //x y rad
-
-   }
-   // Method to continually update the position
-   private void updatePosition() {
-       // Update orbital position
-       position += Math.toRadians(speed / distance);
-       if (position > 2 * Math.PI) {
-           position -= 2 * Math.PI;
-       }
-
-       // Calculate new world position
-       double newX = getRelativeX(500);
-       double newY = getRelativeY(500);
-
-       // Update collision bounds
-       bounds.setCenterX(newX);
-       bounds.setCenterY(newY);
-   }
+    private Color color;
+    private Color glowColor;
+    private double distance, position;
+    private int radius, speed;
+    private Circle bounds;
+    private double[] trailX = new double[15];
+    private double[] trailY = new double[15];
+    private int trailIndex = 0;
+    
+    public Planet(Color color, double distance, double position, int radius, int speed) {
+        this.color = color;
+        this.glowColor = color.deriveColor(0, 1, 1, 0.3);
+        this.distance = distance;
+        this.position = position;
+        this.radius = radius;
+        this.speed = speed;
+        this.bounds = new Circle(getRelativeX(500) - radius, getRelativeY(500) - radius, radius);
+        
+        // Initialize trail arrays
+        for (int i = 0; i < trailX.length; i++) {
+            trailX[i] = getRelativeX(500);
+            trailY[i] = getRelativeY(500);
+        }
+    }
+    
+    private void updatePosition() {
+        position += Math.toRadians(speed / distance);
+        if (position > 2 * Math.PI) position -= 2 * Math.PI;
+        
+        // Update trail
+        trailX[trailIndex] = getRelativeX(500);
+        trailY[trailIndex] = getRelativeY(500);
+        trailIndex = (trailIndex + 1) % trailX.length;
+        
+        bounds.setCenterX(getRelativeX(500));
+        bounds.setCenterY(getRelativeY(500));
+    }
 
     public double getRelativeX(double relativex0) {
         return Sun.WORLD_CENTER_X + distance * Math.cos(position);
@@ -53,19 +52,35 @@ public class Planet {
 
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
         updatePosition();
-
-        // Calculate screen position
+        
+        // Draw orbital trail
+        for (int i = 0; i < trailX.length - 1; i++) {
+            int nextI = (i + 1) % trailX.length;
+            gc.setStroke(color.deriveColor(0, 1, 1, 0.2 * (double)i / trailX.length));
+            gc.setLineWidth(2);
+            gc.strokeLine(
+                trailX[i] - cameraOffsetX,
+                trailY[i] - cameraOffsetY,
+                trailX[nextI] - cameraOffsetX,
+                trailY[nextI] - cameraOffsetY
+            );
+        }
+        
         double screenX = bounds.getCenterX() - radius - cameraOffsetX;
         double screenY = bounds.getCenterY() - radius - cameraOffsetY;
-
-        // Draw the planet
+        
+        // Draw glow
+        gc.setFill(glowColor);
+        gc.fillOval(screenX - 4, screenY - 4, (radius * 2) + 8, (radius * 2) + 8);
+        
+        // Draw planet
         gc.setFill(color);
         gc.fillOval(screenX, screenY, radius * 2, radius * 2);
-
-        // Update collision bounds to match world position
-        bounds.setCenterX(getRelativeX(500));
-        bounds.setCenterY(getRelativeY(500));
-
+        
+        // Draw highlight
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(1);
+        gc.strokeArc(screenX + radius/2, screenY + radius/2, radius, radius, -45, 90, javafx.scene.shape.ArcType.OPEN);
     }
 
 
