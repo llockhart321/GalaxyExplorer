@@ -531,6 +531,7 @@ public class GalaxyMap {
             starSystemB.setyLoc(systemB.y);
         }
 
+        /*
         // Create gates in both systems pointing to each other
         // Use a fixed position near the edge of the system for the gate
         Gate gateToB = new Gate(
@@ -551,9 +552,13 @@ public class GalaxyMap {
                 270
         );
 
+
+
         // Add gates to respective star systems
         starSystemA.addGate(gateToB);
         starSystemB.addGate(gateToA);
+
+         */
 
 
         System.out.println("Created chunk connection between System " + systemA.id + " and System " + systemB.id);
@@ -633,8 +638,9 @@ public class GalaxyMap {
         // that leads to the toSystem's star system
         StarSystem fromStarSystem = StarSystemCache.getInstance().get(fromSystem.id);
 
-        if (fromStarSystem != null) {
+        if (false){//fromStarSystem != null) {
             // Create a gate in the fromStarSystem that leads to toSystem
+
             Gate interChunkGate = new Gate(
                     0,  // direction (can be refined)
                     toSystem.id,  // target system ID
@@ -643,6 +649,8 @@ public class GalaxyMap {
                     fromStarSystem,  // parent star system
                     270
             );
+
+
 
             // Add the gate to the star system
             fromStarSystem.addGate(interChunkGate);

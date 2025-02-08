@@ -51,35 +51,6 @@ public class Planet {
         return Sun.WORLD_CENTER_Y + distance * Math.sin(position);
     }
 
-   
-   // Method to draw the planet
-    /*
-   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
-       updatePosition(); // Update the position before drawing
-
-
-       bounds.setCenterX(bounds.getCenterX()-cameraOffsetX);
-
-       bounds.setCenterY(bounds.getCenterY()-cameraOffsetY);
-
-
-       double x = bounds.getCenterX() - radius ; // Apply camera offset
-       double y = bounds.getCenterY() - radius ; // Apply camera offset
-
-
-       // Draw the planet
-       gc.setFill(color);
-       gc.fillOval(x, y, radius * 2, radius * 2);
-
-       // Draw the bounds for debugging purposes
-       gc.setStroke(Color.BLACK);
-       gc.strokeOval(bounds.getCenterX() - bounds.getRadius() ,
-               bounds.getCenterY() - bounds.getRadius() ,
-               bounds.getRadius() * 2,
-               bounds.getRadius() * 2);
-   }
-   */
-
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
         updatePosition();
 
@@ -116,7 +87,19 @@ public class Planet {
 
         return distance < (bounds.getRadius() + tempPlayerCircle.getRadius());
     }
-    
+
+    // Getter methods for collision
+    public double getX() {
+        return bounds.getCenterX();
+    }
+
+    public double getY() {
+        return bounds.getCenterY();
+    }
+
+    public double getRadius() {
+        return bounds.getRadius();
+    }
 
     public void handleCollision(Player player) {
         // Get centers of both objects

@@ -46,68 +46,7 @@ public class Gate {
          bounds.setHeight(sizeY);
       }
    }
-    /*
-   public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
-    // Draw at screen position (world position - camera offset)
-      double screenX = x - cameraOffsetX;
-      double screenY = y - cameraOffsetY;
-      ticker++;
-      gc.setFill(Color.rgb(173, 216, 230, 0.6));
-      double[] xAr = {x, x + 30, x + 60, x + 60, x};
-      double[] yAr = {y, y + 40, y, y + 50, y + 50};
-      pulseSize = 1 + Math.sin(ticker / 30.0) * 0.2;
-      gc.save();
-      double centerX = x + 30;
-      double centerY = y + 25;
-      gc.translate(centerX, centerY);
-      gc.rotate(rotation);
-      gc.translate(-centerX, -centerY);
-      gc.setFill(Color.rgb(173, 216, 230, 0.5 + Math.abs(Math.sin(ticker / 30.0)) * 0.4));
-      gc.fillPolygon(xAr, yAr, 5);
-      gc.setFill(Color.rgb(173, 216, 230, 0.8));
-      for (int i = 0; i < 3; i++) {
-         double offsetX = Math.sin(ticker / 20.0 + i) * 3;
-         double offsetY = Math.cos(ticker / 20.0 + i) * 3;
-         gc.fillPolygon(new double[]{x + offsetX, x + 30 + offsetX, x + 60 + offsetX, x + 60, x + offsetX},
-                    new double[]{y + offsetY, y + 40 + offsetY, y + offsetY, y + 50 + offsetY, y + 50 + offsetY}, 5);
-      }
-      for (int i = 0; i <= ticker / 100; i++) {
-         if (i % 10 == 0) {
-            drawRays(gc, ticker / 100 - i);
-         }
-      }
-      if (ticker % 500 == 0) {
-         gc.setFill(Color.color(Math.random(), Math.random(), Math.random(), 0.8));
-         gc.fillPolygon(xAr, yAr, 5);
-      }
-      gc.restore();
-      // Draw bounds for debugging (can remove this in production)
-      gc.setStroke(Color.RED);
-      gc.strokeRect(screenX, screenY, sizeX, sizeY);
-      // Display target system ID
-      gc.setFill(Color.CYAN);
-      gc.setFont(javafx.scene.text.Font.font(10));
-      gc.fillText(
-                "To System: " + targetSystem,
-                screenX,
-                screenY - 10
-         );
-   }
 
-
-   private void drawRays(GraphicsContext gc, int size) {
-      if (size < 60) {
-         double r = Math.sin(ticker / 30.0 + size * 0.1) * 0.5 + 0.5;
-         double g = Math.cos(ticker / 30.0 + size * 0.1) * 0.5 + 0.5;
-         double b = Math.sin(ticker / 40.0 + size * 0.1) * 0.5 + 0.5;
-         gc.setStroke(Color.color(r, g, b));
-         gc.setLineWidth(2);
-         gc.strokeLine(x + size, y, x + 30, y + 40 - size * 0.5);
-         gc.strokeLine(x + 30, y + 40 - size * 0.5, x + 60 - size, y);
-      }
-   }
-
-     */
 
 
 
