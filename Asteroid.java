@@ -46,7 +46,7 @@ public class Asteroid {
                     for (AsteroidPart remainingPart : parts) {
                         Point2D partPos = remainingPart.getPosition();
                         double distance = partPos.distance(part.getPosition());
-                        double forceFactor = 1.0 / (1.0 + distance);
+                        double forceFactor = 0.5 / (1.0 + distance);
                         // Calculate force direction away from the impact
                         Point2D forceDir = partPos.subtract(part.getPosition()).normalize();
                         Point2D impulse = forceDir.multiply(IMPACT_FORCE * forceFactor);
@@ -142,6 +142,7 @@ public class Asteroid {
                 player.getX() + Player.getBounds().getRadius(),
                 player.getY() + Player.getBounds().getRadius()
         );
+        
         // Check if any part of the asteroid collides with the player
         for (AsteroidPart part : parts) {
             Point2D partWorldPos = asteroidCenter.add(part.getPosition());

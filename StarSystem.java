@@ -63,17 +63,19 @@ public class StarSystem {
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
-         int minRadius = 20;
+         int minRadius = 40;
          int maxRadius = 100;
          int minDistance = 500;
-         int maxDistance = 1500; //setting mins and maxes for random parameters for planets 
+         int maxDistance = 2300; //setting mins and maxes for random parameters for planets 
+         
        
          
          Color color = Color.color(Math.random(), Math.random(), Math.random());
         
          int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius; //getting a random radius and distance for each planet 
+         int radians = rand.nextInt(100);
          int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
-         this.planets.add(new Planet(color, distance, 30, radius, 30));
+         this.planets.add(new Planet(color, distance, radians, radius, 30));
          System.out.println("new planet");
       }
       
