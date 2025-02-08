@@ -1,40 +1,30 @@
 import javafx.scene.shape.*;
 import javafx.scene.canvas.*;
 import javafx.scene.paint.*;
+import javafx.scene.effect.*;
 
-// Player singleton class
 public class Player {
-   // Class instance
-   private static Player instance;
-   private static StarSystem currentSystem;
-   // Coordinates
-   private double x, y;
-   // Size
-   private static double radius = 20;
-   // For collision
-   private static Circle bounds = new Circle(radius);
-   // Ints for player movement for Camera
-   private int leftright = 0;
-   private int updown = 0;
-
-   // Public method to get private instance
-   public static Player getInstance() {
-      // Ensure instance is instantiated
-      if (instance == null) {
-         instance = new Player();
-      }
-      // Return instance
-      return instance;
-   }
-
-   // Private constructor
-   private Player() {
-      // Set player on screen
-      x = 380;
-      y = 220;
-      bounds.setCenterX(x + radius);
-      bounds.setCenterY(y + radius);
-   }
+    private static Player instance;
+    private static StarSystem currentSystem;
+    private double x, y;
+    private static double radius = 20;
+    private static Circle bounds = new Circle(radius);
+    private int leftright = 0;
+    private int updown = 0;
+    private Color primaryColor = Color.rgb(255, 51, 153);  // Hot pink
+    private Color glowColor = Color.rgb(0, 255, 255, 0.5); // Cyan glow
+    
+    public static Player getInstance() {
+        if (instance == null) instance = new Player();
+        return instance;
+    }
+    
+    private Player() {
+        x = 380;
+        y = 220;
+        bounds.setCenterX(x + radius);
+        bounds.setCenterY(y + radius);
+    }
 
    public static Circle getBounds() {
       return bounds;
@@ -84,14 +74,26 @@ public class Player {
    }
 
    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
-      gc.setFill(Color.LIGHTBLUE);
-      gc.fillOval(x - cameraOffsetX, y - cameraOffsetY, radius * 2, radius * 2);
-
-      gc.setStroke(Color.BLACK);
-      gc.strokeOval(bounds.getCenterX() - radius - cameraOffsetX,
-              bounds.getCenterY() - radius - cameraOffsetY,
-              radius * 2, radius * 2);
-   }
+        double drawX = x - cameraOffsetX;
+        double drawY = y - cameraOffsetY;
+        
+        // Draw glow effect
+        gc.setFill(glowColor);
+        gc.fillOval(drawX - 2, drawY - 2, radius * 2 + 4, radius * 2 + 4);
+        
+        // Draw main ship
+        gc.setFill(primaryColor);
+        gc.fillOval(drawX, drawY, radius * 2, radius * 2);
+        
+        // Draw geometric details
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(2);
+        gc.strokePolygon(
+            new double[]{drawX + radius, drawX + radius * 2, drawX},
+            new double[]{drawY, drawY + radius, drawY + radius},
+            3
+        );
+    }
 
    public StarSystem getSystem() {
       return currentSystem;
