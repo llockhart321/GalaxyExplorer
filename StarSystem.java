@@ -148,29 +148,53 @@ public class StarSystem {
 
         switch (generalArea) {
             case "UR": // Upper right
-                xStart = GRID_WIDTH / 2;
-                xEnd = GRID_WIDTH;
-                yStart = 0;
-                yEnd = GRID_HEIGHT / 2;
-                break;
-            case "UL": // Upper left
-                xStart = 0;
-                xEnd = GRID_WIDTH / 2;
-                yStart = 0;
-                yEnd = GRID_HEIGHT / 2;
-                break;
-            case "LR": // Lower right
-                xStart = GRID_WIDTH / 2;
-                xEnd = GRID_WIDTH;
-                yStart = GRID_HEIGHT / 2;
-                yEnd = GRID_HEIGHT;
-                break;
-            case "LL": // Lower left
-                xStart = 0;
-                xEnd = GRID_WIDTH / 2;
-                yStart = GRID_HEIGHT / 2;
-                yEnd = GRID_HEIGHT;
-                break;
+               xStart = GRID_WIDTH / 2;
+               xEnd = GRID_WIDTH;
+               yStart = 0;
+               yEnd = GRID_HEIGHT / 2;
+               break;
+           case "UM": // Upper middle
+               xStart = GRID_WIDTH / 4;
+               xEnd = (3 * GRID_WIDTH) / 4;
+               yStart = 0;
+               yEnd = GRID_HEIGHT / 2;
+               break;
+           case "UL": // Upper left
+               xStart = 0;
+               xEnd = GRID_WIDTH / 2;
+               yStart = 0;
+               yEnd = GRID_HEIGHT / 2;
+               break;
+           case "MR": // Middle right
+               xStart = GRID_WIDTH / 2;
+               xEnd = GRID_WIDTH;
+               yStart = GRID_HEIGHT / 4;
+               yEnd = (3 * GRID_HEIGHT) / 4;
+               break;
+           case "ML": // Middle left
+               xStart = 0;
+               xEnd = GRID_WIDTH / 2;
+               yStart = GRID_HEIGHT / 4;
+               yEnd = (3 * GRID_HEIGHT) / 4;
+               break;
+           case "LR": // Lower right
+               xStart = GRID_WIDTH / 2;
+               xEnd = GRID_WIDTH;
+               yStart = GRID_HEIGHT / 2;
+               yEnd = GRID_HEIGHT;
+               break;
+           case "LM": // Lower middle
+               xStart = GRID_WIDTH / 4;
+               xEnd = (3 * GRID_WIDTH) / 4;
+               yStart = GRID_HEIGHT / 2;
+               yEnd = GRID_HEIGHT;
+               break;
+           case "LL": // Lower left
+               xStart = 0;
+               xEnd = GRID_WIDTH / 2;
+               yStart = GRID_HEIGHT / 2;
+               yEnd = GRID_HEIGHT;
+               break;
             default:
                 System.out.println("Invalid area input");
                 return null;
