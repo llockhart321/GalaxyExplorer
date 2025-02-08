@@ -116,6 +116,18 @@ public class Planet {
 
         return distance < (bounds.getRadius() + tempPlayerCircle.getRadius());
     }
+    // Getter methods for collision
+    public double getX() {
+        return bounds.getCenterX();
+    }
+
+    public double getY() {
+        return bounds.getCenterY();
+    }
+
+    public double getRadius() {
+        return bounds.getRadius();
+    }
 
     public void handleCollision(Player player) {
         // Get centers of both objects

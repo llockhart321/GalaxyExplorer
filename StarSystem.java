@@ -12,6 +12,9 @@ import javafx.geometry.Point2D;
 
 
 public class StarSystem {
+   private static final int GRID_WIDTH = 4000;
+   private static final int GRID_HEIGHT = 2250;
+   private static final int GRID_CELL_SIZE = 450; 
    private List <Planet> planets;
    private List<Asteroid> asteroids;
    private List <Gate> gates;
@@ -24,6 +27,7 @@ public class StarSystem {
    private static int idCounter = 0;
    private StarSystemNebula nebula;
    private Sun sun;
+   
 
 
    // this is the location of the star systejm in the map.
@@ -138,6 +142,74 @@ public class StarSystem {
    
       
    }
+   public Point2D getValidGateSpawn(String generalArea) {
+        // Define the grid boundaries based on input
+        int xStart = 0, xEnd = 0, yStart = 0, yEnd = 0;
+
+        switch (generalArea) {
+            case "UR": // Upper right
+                xStart = GRID_WIDTH / 2;
+                xEnd = GRID_WIDTH;
+                yStart = 0;
+                yEnd = GRID_HEIGHT / 2;
+                break;
+            case "UL": // Upper left
+                xStart = 0;
+                xEnd = GRID_WIDTH / 2;
+                yStart = 0;
+                yEnd = GRID_HEIGHT / 2;
+                break;
+            case "LR": // Lower right
+                xStart = GRID_WIDTH / 2;
+                xEnd = GRID_WIDTH;
+                yStart = GRID_HEIGHT / 2;
+                yEnd = GRID_HEIGHT;
+                break;
+            case "LL": // Lower left
+                xStart = 0;
+                xEnd = GRID_WIDTH / 2;
+                yStart = GRID_HEIGHT / 2;
+                yEnd = GRID_HEIGHT;
+                break;
+            default:
+                System.out.println("Invalid area input");
+                return null;
+        }
+
+        Random rand = new Random();
+
+        // Try random points within the specified area until a valid one is found
+        for (int attempts = 0; attempts < 1000; attempts++) {
+            double x = xStart + rand.nextDouble() * (xEnd - xStart);
+            double y = yStart + rand.nextDouble() * (yEnd - yStart);
+            Point2D candidatePoint = new Point2D(x, y);
+
+            // Check for collisions with the sun and planets
+            if (!isOverlappingSun(candidatePoint) && !isOverlappingPlanet(candidatePoint)) {
+                return candidatePoint;
+            }
+        }
+
+        System.out.println("No valid gate location found after multiple attempts.");
+        return null;
+    }
+
+    private boolean isOverlappingSun(Point2D point) {
+        double distanceToSun = point.distance(Sun.WORLD_CENTER_X, Sun.WORLD_CENTER_Y);
+        return distanceToSun < sun.getRadius();
+    }
+
+    private boolean isOverlappingPlanet(Point2D point) {
+        for (Planet planet : planets) {
+            double distanceToPlanet = point.distance(planet.getX(), planet.getY());
+            if (distanceToPlanet < planet.getRadius()) {
+                return true;
+            }
+        }
+        return false;
+    }
+   
+   
    public List<Planet> getPlanets() {
        return this.planets;
    }
