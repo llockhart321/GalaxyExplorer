@@ -12,7 +12,7 @@ public class Sun {
 
     public Sun() {
         this.color = Color.YELLOW;
-        this.radius = 100; // Adjust size as needed
+        this.radius = 300; // Adjust size as needed
         
         // Create bounds at the center of the world
         this.bounds = new Circle(WORLD_CENTER_X, WORLD_CENTER_Y, radius);

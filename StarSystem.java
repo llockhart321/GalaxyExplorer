@@ -59,22 +59,25 @@ public class StarSystem {
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
-         int minRadius = 80;
-         int maxRadius = 200;
-         int minDistance = 200;
-         int maxDistance = 600; //setting mins and maxes for random parameters for planets 
+         int minRadius = 20;
+         int maxRadius = 100;
+         int minDistance = 600;
+         int maxDistance = 6000; //setting mins and maxes for random parameters for planets 
        
          
          Color color = Color.color(Math.random(), Math.random(), Math.random());
         
          int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius; //getting a random radius and distance for each planet 
          int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
-         this.planets.add(new Planet(color, distance, 30, radius, 100));
+         this.planets.add(new Planet(color, distance, 30, radius, 10));
          System.out.println("new planet");
       }
       
               // Generate asteroids
-      int asteroidDistance = 300; // Fixed distance for all asteroids
+      int maxAstDist = 800;
+      int minAstDist = 400;
+      
+      int asteroidDistance = rand.nextInt(maxAstDist - minAstDist + 1) + minAstDist; // Fixed distance for all asteroids
       for (int i = 0; i < numAsteroids; i++) {
          int minRadius = 3;
          int maxRadius = 8;
@@ -110,19 +113,19 @@ public class StarSystem {
       // Create the sun
     sun = new Sun(); // Add this line and create a Sun field in the class
     
-    for (int i = 0; i < numPlanets; i++) {
+    /*for (int i = 0; i < numPlanets; i++) {
         int minRadius = 80;
         int maxRadius = 200;
-        int minDistance = 600;
-        int maxDistance = 1000;
+        int minDistance = 10000;
+        int maxDistance = 1000000;
         
         Color color = Color.color(Math.random(), Math.random(), Math.random());
         
         int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
         int distance = rand.nextInt(maxDistance) + minDistance;
-        this.planets.add(new Planet(color, distance, 30, radius, 100));
+        this.planets.add(new Planet(color, distance, 30, radius, 1));
     }
-      
+      */
       // Fill the gates arraylist
    
       
@@ -216,13 +219,15 @@ public class StarSystem {
       nebula.setOffset(cameraOffsetX, cameraOffsetY);
       nebula.draw(gc);
       
-       //draw the sun
-       sun.drawMe(gc, cameraOffsetX, cameraOffsetY);
-
       gc.setFill(Color.WHITE);
       for (int i = 0; i < starX.size(); i++) {
           gc.fillOval(starX.get(i) - cameraOffsetX, starY.get(i) - cameraOffsetY, starRadius.get(i), starRadius.get(i));
       }
+      
+       //draw the sun
+       sun.drawMe(gc, cameraOffsetX, cameraOffsetY);
+
+      
 
 
 
