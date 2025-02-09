@@ -400,12 +400,67 @@ public class GalaxyMap {
                     int targetSystem = targetIDs.get(i);
                     double x = random.nextDouble(50, 700);
                     double y = random.nextDouble(20, 300);
-                    //getValidGateSpawn(string generalArea)
-                    StarSystemCache.getInstance().get(ssID).addGate(new Gate(direction, targetSystem, x, y, ssID));
+                    StarSystem target = StarSystemCache.getInstance().get(ssID);
+                    String generalArea = getSystemChunkPosition(ssID,getSystemChunk(ssID) );
+                    System.out.println("gate "+ssID+" is near "+generalArea);
+                    javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
+                    target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
                     systemData.get(ssID).addConnection(targetSystem);
                 }
             }
         }
+    }
+
+
+    /**
+    does not work :(
+     */
+    public String getSystemChunkPosition(int ssID, Point chunkLoc) {
+        SystemData system = systemData.get(ssID);
+        if (system == null) {
+            return "";
+        }
+
+        // Calculate position relative to chunk's origin
+        double chunkStartX = chunkLoc.x * CHUNK_SIZE;
+        double chunkStartY = chunkLoc.y * CHUNK_SIZE;
+
+        // Get relative position within the chunk
+        double relX = system.position.x - chunkStartX;
+        double relY = system.position.y - chunkStartY;
+        
+
+        // Define thirds of the chunk
+        double thirdSize = CHUNK_SIZE / 3.0;
+
+        // Determine horizontal position
+        String horizontal;
+        if (relX < thirdSize) {
+            horizontal = "L";
+        } else if (relX < 2 * thirdSize) {
+            horizontal = "M";
+        } else {
+            horizontal = "R";
+        }
+
+        // Determine vertical position
+        String vertical;
+        if (relY < thirdSize) {
+            vertical = "U";
+        } else if (relY < 2 * thirdSize) {
+            vertical = "M";
+        } else {
+            vertical = "L";
+        }
+
+        // If it's in the middle-middle, shift it to middle-right
+        if (horizontal.equals("M") && vertical.equals("M")) {
+            horizontal = "R";
+        }
+
+        String position = vertical + horizontal;
+        System.out.println("Calculated position: " + position + " for system " + ssID + " in chunk " + chunkLoc);
+        return position;
     }
 
 
