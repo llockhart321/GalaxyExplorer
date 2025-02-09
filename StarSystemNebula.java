@@ -10,8 +10,8 @@ public class StarSystemNebula {
     private int height;
     private double offsetX = 0;
     private double offsetY = 0;
-    private final int GRID_SIZE = 32; // Reduced from 64
-    private final double SCALE = 180.0; // Increased from 120
+    private final int GRID_SIZE = 32;
+    private final double SCALE = 180.0;
     
     public StarSystemNebula(int width, int height, long seed) {
         this.width = width * 5;

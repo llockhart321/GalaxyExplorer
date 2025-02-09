@@ -2,8 +2,8 @@ public class PlayerMovementState {
    private static PlayerMovementState instance;
    private double deltaX = 0;
    private double deltaY = 0;
-   private double slowRate = 0.010;
-   private double speed = 1.0; 
+   private double slowRate = 0.10;
+   private double speed = 5.0; 
    private boolean movingRight = false;
    private boolean movingLeft = false;
    private boolean movingDown = false;
