@@ -1,3 +1,9 @@
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.scene.canvas.GraphicsContext;
+import java.awt.Point;
+import java.awt.geom.Point2D;
+import java.util.*;
 import javafx.scene.paint.*;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -27,169 +33,78 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.canvas.Canvas;
 import java.util.*;
-
-
-
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.canvas.Canvas;
+import javafx.util.Duration;
+
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class GalaxyMap {
-    private static GraphicsContext gc;
-    private static AnimationHandler ah;
-    private static boolean isOpen = false;
-    private static final int WIDTH = 800;
-    private static final int HEIGHT = 450;
 
-    // View properties
+    // Singleton instance
+    private static GalaxyMap instance;
+
+    private  GraphicsContext gc;
+    private  AnimationHandler ah;
+
+
+    private  boolean isOpen = false;
+    private  boolean validDebug = true;
+
+    private  final int WIDTH = 800;
+    private  final int HEIGHT = 450;
     private double viewX = 0;
     private double viewY = 0;
     private double scale = 1.0;
     private double minScale = 0.5;
     private double maxScale = 6.0;
-
-    // Mouse tracking for pan
     private double lastMouseX;
     private double lastMouseY;
     private boolean isPanning = false;
 
-    // Chunk management
-    private static final int CHUNK_SIZE = 200;
-    private Map<ChunkCoord, Chunk> loadedChunks = new HashMap<>();
-    private static Set<ChunkCoord> discoveredChunks = new HashSet<>();
-    //private static final Random random = new Random(42); // Fixed seed for consistency
+    //random for deciding how many star systems in a chunk
+    private  final Random random = new Random();
 
-    // Starting chunk coordinates
-    private static final ChunkCoord STARTING_CHUNK = new ChunkCoord(0, 0);
 
-    // Singleton instance
-    private static GalaxyMap instance;
-    private StarSystemData currentSystem; // Track current system for zoom centering
 
-    private static final Random random = new Random(System.currentTimeMillis());
 
-    private static class ChunkCoord {
-        final int x, y;
+    private boolean debugMode = false;
 
-        ChunkCoord(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ChunkCoord)) return false;
-            ChunkCoord that = (ChunkCoord) o;
-            return x == that.x && y == that.y;
-        }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
-        }
-    }
+    private int CHUNK_SIZE = 50;
 
-    private static class Chunk {
-        List<StarSystemData> systems = new ArrayList<>();
-        ChunkCoord chunkCoord;
 
-        Chunk(ChunkCoord coord) {
-            this.chunkCoord = coord;
 
-            // Use a new random seed based on chunk coordinates and current time
-            Random chunkRandom = new Random(
-                    System.currentTimeMillis() +
-                            coord.x * 10000L +
-                            coord.y * 1000L
-            );
+    // all the chunks and their star systems
+    private int currentSystem = 0; // Track current system for zoom centering
 
-            // Random number of systems per chunk, between 2 and 5
-            int systemCount = chunkRandom.nextInt(4) + 2;
+    //private  Map<Point, List<Integer>> chunks = new HashMap<>();
+    private Map<Point, Set<Integer>> chunks = new HashMap<>();
 
-            for (int i = 0; i < systemCount; i++) {
-                // Add some randomization to position but keep it away from edges
-                int padding = CHUNK_SIZE / 4;
-                double x = coord.x * CHUNK_SIZE + padding + chunkRandom.nextDouble() * (CHUNK_SIZE - 2 * padding);
-                double y = coord.y * CHUNK_SIZE + padding + chunkRandom.nextDouble() * (CHUNK_SIZE - 2 * padding);
-                systems.add(new StarSystemData(x, y, generateSystemId(coord, i)));
-            }
-        }
-    }
 
-    // Method to prepare inter-chunk connections
-    private void prepareChunkConnections() {
-        // Directions to check: top-left, top, top-right, left, right, bottom-left, bottom, bottom-right
-        int[][] directions = {
-                {-1, -1}, {0, -1}, {1, -1},
-                {-1, 0},           {1, 0},
-                {-1, 1}, {0, 1}, {1, 1}
-        };
+    //the star systems and whether or not we have visited them or not
+    //private final Map<Integer, Boolean> visitedSS = new HashMap<>();
 
-        // For each discovered chunk
-        for (ChunkCoord currentChunkCoord : discoveredChunks) {
-            Chunk currentChunk = loadedChunks.get(currentChunkCoord);
+    //star systems and their on map locations
+    //private final Map<Integer, Point2D.Double> starSystemPositions = new HashMap<>();
 
-            // Check neighboring chunks
-            for (int[] dir : directions) {
-                ChunkCoord neighborChunkCoord = new ChunkCoord(
-                        currentChunkCoord.x + dir[0],
-                        currentChunkCoord.y + dir[1]
-                );
+    //vars for innerclass drwawring
+    private  Map<Integer, SystemData> systemData = new HashMap<>();
+    private Queue<Integer> processingQueue = new LinkedList<>();
 
-                // Skip if neighbor chunk is not discovered
-                if (!discoveredChunks.contains(neighborChunkCoord)) continue;
 
-                Chunk neighborChunk = loadedChunks.get(neighborChunkCoord);
 
-                // Determine edge for connection
-                String edge = determineEdge(dir);
 
-                // Find nearest systems to connect
-                StarSystemData currentSystem = findSystemNearestToEdge(currentChunk, getOppositeEdge(edge));
-                StarSystemData neighborSystem = findSystemNearestToEdge(neighborChunk, edge);
-
-                // Create connection (you'll need to implement the actual gate creation)
-                // This is a placeholder for your actual gate creation logic
-                createChunkConnection(currentSystem, neighborSystem);
-            }
-        }
-    }
-
-    private static class StarSystemData {
-        final double x, y;
-        final int id;
-        boolean visited = false;
-
-        StarSystemData(double x, double y, int id) {
-            this.x = x;
-            this.y = y;
-            this.id = id;
-        }
-    }
-
-    // Private constructor for singleton
     private GalaxyMap() {
-        // Seed the initial chunk discovery with the current time
-        long seed = System.currentTimeMillis();
-        Random initialRandom = new Random(seed);
 
-        discoveredChunks.add(STARTING_CHUNK);
-        loadedChunks.put(STARTING_CHUNK, new Chunk(STARTING_CHUNK));
-
-        // Find and set initial current system
-        Chunk startChunk = loadedChunks.get(STARTING_CHUNK);
-        if (!startChunk.systems.isEmpty()) {
-            // Randomly select a system from the starting chunk
-            currentSystem = startChunk.systems.get(
-                    initialRandom.nextInt(startChunk.systems.size())
-            );
-        }
     }
-
     public static GalaxyMap getInstance() {
         if (instance == null) {
             instance = new GalaxyMap();
@@ -197,129 +112,188 @@ public class GalaxyMap {
         return instance;
     }
 
-    private static int generateSystemId(ChunkCoord coord, int systemIndex) {
-        // Use a combination of chunk coordinates and system index
-        // This ensures unique IDs across different chunk layouts
-        return Math.abs((coord.x * 10000 + coord.y) * 100 + systemIndex);
+    //called from main to set gc and animationh
+    public void set(GraphicsContext gc, AnimationHandler ah) {
+        this.gc = gc;
+        this.ah = ah;
     }
 
-    public void initializeChunkConnections() {
-        // Call this method whenever a new system is set or discovered
-        prepareChunkConnections();
-        generateChunkConnections();
-    }
 
-    // Get chunk coordinates from system coordinates
-    private ChunkCoord getChunkCoordFromSystem(double x, double y) {
-        int chunkX = (int) Math.floor(x / CHUNK_SIZE);
-        int chunkY = (int) Math.floor(y / CHUNK_SIZE);
-        return new ChunkCoord(chunkX, chunkY);
-    }
+    //create the next chunk of star systems. is called by main to create inital starsystems
+    public  void createChunk(int chunkLocX, int chunkLocY){
 
-    // Draw method
-    private void draw() {
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, WIDTH, HEIGHT);
 
-        gc.save();
-        gc.translate(WIDTH/2, HEIGHT/2);
-        gc.scale(scale, scale);
-        gc.translate(viewX, viewY);
+        //get chunks coords.
+        //Point chunk = determineChunkLoc();
+        Point chunk = new Point(chunkLocX, chunkLocY);
 
-        // Draw chunk boundaries (for debugging)
-        gc.setStroke(Color.DARKGRAY);
-        gc.setLineWidth(1.0 / scale);
-        for (ChunkCoord coord : discoveredChunks) {
-            double x = coord.x * CHUNK_SIZE;
-            double y = coord.y * CHUNK_SIZE;
+        //create chunk in chunks list
+        //chunks.putIfAbsent(chunk, new ArrayList<>());
+        chunks.putIfAbsent(chunk, new HashSet<>());
 
-            gc.strokeRect(x, y, CHUNK_SIZE, CHUNK_SIZE);
+
+
+        //bounds for how many, maybe should get more specific in future
+        int ssCount = random.nextInt(3,5);
+
+        //get ss coordinates to draw in map to make spiral
+        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount);
+
+        // add ss' to chunk
+        for(int i=0; i<ssCount; i++) {
+            //first create system
+            int newSys = StarSystemCache.getInstance().createSystem(gc);
+            //then add system to chunks list
+            Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
+            starSystems.add(newSys);
+            //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
+
+
+            SystemData sysData = new SystemData(newSys, coords.pop());
+            systemData.put(newSys, sysData);
+
+
+
         }
 
-        // Draw connections and systems
-        for (ChunkCoord coord : discoveredChunks) {
-            Chunk chunk = loadedChunks.get(coord);
-            if (chunk == null) continue;
 
-            // Draw connections between systems within the same chunk
-            for (int i = 0; i < chunk.systems.size(); i++) {
-                StarSystemData systemA = chunk.systems.get(i);
+        // add gates to all the star systems we have just created
+        //List<Integer> allStarSystems = chunks.getOrDefault(chunk, Collections.emptyList());
+        Set<Integer> allStarSystemsSet = chunks.getOrDefault(chunk, Collections.emptySet());
 
-                for (int j = i + 1; j < chunk.systems.size(); j++) {
-                    StarSystemData systemB = chunk.systems.get(j);
+        System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
 
-                    // Determine connection color
-                    if (systemA.visited && systemB.visited) {
-                        gc.setStroke(Color.WHITE);
-                    } else {
-                        gc.setStroke(Color.GRAY);
-                    }
+        List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
+        //assign gates
+        for(int i=0; i<allStarSystems.size(); i++){
 
-                    // Draw connection line
-                    gc.setLineWidth(1.0 / scale);
-                    gc.strokeLine(systemA.x, systemA.y, systemB.x, systemB.y);
-                }
-            }
+            //chunks.getOrDefault(new Point(0, 0), Collections.emptyList())
+            //find possible connections for current ss
 
-            // Draw systems
-            for (StarSystemData system : chunk.systems) {
-                double dotSize = 6;
+            //first add all gates for local group
+            // call method to get general area for each gate
+            // make a map :( of allstarsystems and their general area string
 
-                // Determine system color and visited status
-                if (currentSystem != null && system.id == currentSystem.id) {
-                    // Current system
-                    gc.setFill(Color.PURPLE);
-                    system.visited = true;
-                } else if (StarSystemCache.getInstance().get(system.id) != null) {
-                    // System has been visited
-                    gc.setFill(Color.WHITE);
-                    system.visited = true;
-                } else {
-                    // Undiscovered system
-                    gc.setFill(Color.GRAY);
-                }
+            //add gates to each ss
+            assignGates(allStarSystems.get(i), allStarSystems);
 
-                // Draw system dot
-                gc.fillOval(
-                        system.x - dotSize/2,
-                        system.y - dotSize/2,
-                        dotSize,
-                        dotSize
-                );
+            // find ss' on edges to go to other chunks
+            // make the gates to go to other edges.
 
-                // Draw system ID
-                gc.setFill(Color.CYAN);
-                gc.setFont(javafx.scene.text.Font.font(8.0 / scale)); // Adjust font size based on zoom
-                gc.fillText(
-                        String.valueOf(system.id),
-                        system.x + dotSize,
-                        system.y - dotSize
-                );
-            }
+
+
         }
 
-        gc.restore();
+
+        handleNeighbors();
+
     }
 
-    // Helper method to find the system closest to a chunk edge
-    private StarSystemData findSystemNearestToEdge(Chunk chunk, String edge) {
-        StarSystemData nearestSystem = null;
+    private void handleNeighbors(){
+
+        // create 3x3 chunk grid around currentstarsystem
+        createSurroundingChunks();
+
+        Point chunk = getSystemChunk(currentSystem);
+        int chunkLocX = (int)chunk.getX();
+        int chunkLocY = (int)chunk.getY();
+
+
+        Set<Integer> allStarSystemsSet = chunks.getOrDefault(chunk, Collections.emptySet());
+        List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
+
+
+        List<Integer> targetSys = new ArrayList<>();
+
+        if(getSystemChunk(currentSystem) == chunk){
+
+            //find left neighbor connection
+            targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX-1, chunkLocY), "left").id));
+            SystemData left =findSystemNearestToEdge(chunk, "left");
+            assignGates(allStarSystems.get(left.id), targetSys);
+
+            //find right neighbor connection
+            targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX+1, chunkLocY), "right").id));
+            SystemData right =findSystemNearestToEdge(chunk, "right");
+            assignGates(allStarSystems.get(right.id), targetSys);
+
+            //find bottom neighbor connection
+            targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY+1), "bottom").id));
+            SystemData bottom =findSystemNearestToEdge(chunk, "bottom");
+            assignGates(allStarSystems.get(bottom.id), targetSys);
+
+            //find top neighbor connection
+            targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY-1), "top").id));
+            SystemData top =findSystemNearestToEdge(chunk, "top");
+            assignGates(allStarSystems.get(top.id), targetSys);
+
+        }
+    }
+
+    private Point getSystemChunk(int id) {
+        // Find the chunk that contains currentSystem
+        Point currentChunk = null;
+        for (Map.Entry<Point, Set<Integer>> entry : chunks.entrySet()) {
+            if (entry.getValue().contains(id)) {
+                currentChunk = entry.getKey();
+                break;
+            }
+        }
+        return currentChunk;
+    }
+
+    public void createSurroundingChunks() {
+
+
+
+        Point currentChunk = getSystemChunk(currentSystem);
+        if (currentChunk == null) {
+            System.out.println("System not found in any chunk.");
+            return;
+        }
+
+        int cx = currentChunk.x;
+        int cy = currentChunk.y;
+
+        // Iterate through the 3x3 grid around the current chunk
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                int newX = cx + dx;
+                int newY = cy + dy;
+                Point newChunk = new Point(newX, newY);
+
+                // Check if the chunk already exists
+                if (!chunks.containsKey(newChunk)) {
+                    createChunk(newX, newY);
+                }
+            }
+        }
+    }
+
+
+
+    private SystemData findSystemNearestToEdge(Point chunkCoord, String edge) {
+        Set<Integer> systemIds = chunks.getOrDefault(chunkCoord, Collections.emptySet());
+        SystemData nearestSystem = null;
         double minDistance = Double.MAX_VALUE;
 
-        for (StarSystemData system : chunk.systems) {
+        for (int systemId : systemIds) {
+            SystemData system = systemData.get(systemId);
+            if (system == null) continue;
+
             double distance = 0;
             switch (edge) {
                 case "left":
-                    distance = system.x;
+                    distance = system.position.x;
                     break;
                 case "right":
-                    distance = Math.abs(system.x - (chunk.chunkCoord.x + 1) * CHUNK_SIZE);
+                    distance = Math.abs(system.position.x - (chunkCoord.x + 1) ); // ommitted * chunksize
                     break;
                 case "top":
-                    distance = system.y;
+                    distance = system.position.y;
                     break;
                 case "bottom":
-                    distance = Math.abs(system.y - (chunk.chunkCoord.y + 1) * CHUNK_SIZE);
+                    distance = Math.abs(system.position.y - (chunkCoord.y + 1) );
                     break;
             }
 
@@ -333,17 +307,79 @@ public class GalaxyMap {
     }
 
 
-    // Method to discover a new chunk when visiting a system
-    public void discoverChunkFromSystemCoords(double x, double y) {
-        ChunkCoord newChunk = getChunkCoordFromSystem(x, y);
-        if (!discoveredChunks.contains(newChunk)) {
-            discoveredChunks.add(newChunk);
-            loadedChunks.put(newChunk, new Chunk(newChunk));
-            //draw();
+
+
+
+
+
+    private  Deque<Point2D.Double> determineStarSystemCoords(int ssCount){
+
+        //wizard level code to find spiral locations ;)
+
+        Deque< Point2D.Double> coords = new ArrayDeque<>();
+
+        for(int i=0; i<ssCount; i++) {
+
+            Point2D.Double position = new Point2D.Double(random.nextDouble(100,200), random.nextDouble(100,200));
+            coords.push(position);
+
+        }
+        return coords;
+    }
+
+
+
+
+    // build gates for a star system. used when chunks are create and new chunks discovered
+    private  void assignGates(int ssID, List<Integer>targetIDs){
+
+        List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
+
+        //create gate
+        for(int i=0; i<targetIDs.size(); i++){
+
+            //make sure gate doesnt go to self
+            if(ssID != targetIDs.get(i)){
+                // make sure gate doesnt already exist
+                boolean exists = false;
+                for (Gate gate : systemGates) {
+                    if (gate.getTargetSystem() == targetIDs.get(i)) {
+                        exists = true;
+                        break;
+                    }
+                }
+                // if ssid doesnt already have gate to target
+                if(!exists) {
+
+                    int direction = 0;
+                    int targetSystem = targetIDs.get(i);
+                    double x = random.nextDouble(50, 700);
+                    double y = random.nextDouble(20, 300);
+                    //getValidGateSpawn(string generalArea)
+                    StarSystemCache.getInstance().get(ssID).addGate(new Gate(direction, targetSystem, x, y, ssID));
+                    systemData.get(ssID).addConnection(targetSystem);
+                }
+            }
         }
     }
 
-    // Event handling methods remain the same as in your original code
+
+    // when player goes to a new system map need to be updated
+    public void setCurrentSystem(int systemId) {
+
+        // Mark the system as visited if not already
+        // set current system.
+        currentSystem = systemId;
+        systemData.get(currentSystem).visited=true;
+        // check if we need to load neighboring chunk
+
+    }
+
+
+
+
+
+    // this is called to open the map
     public void mapAction() {
         if (!isOpen) {
             isOpen = true;
@@ -352,6 +388,7 @@ public class GalaxyMap {
             draw();
         } else {
             isOpen = false;
+            closeMap();
             scale = 1;
             viewX = 0;
             viewY = 0;
@@ -359,12 +396,109 @@ public class GalaxyMap {
         }
     }
 
-    public void set(GraphicsContext gc, AnimationHandler ah) {
-        this.gc = gc;
-        this.ah = ah;
+    public void closeMap() {
+        isOpen = false;
+        debugMode = false;
+
+        /*
+        isOpen = false;
+        debugDrawMode = false;  // Disable debug drawing mode
+        if (expansionTimeline != null) {
+            expansionTimeline.stop();
+        }
+        isDebugExpanding = false;
+
+         */
     }
 
+
+
+
+    //draw
+    private void draw() {
+        // Clear background
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0, 0, WIDTH, HEIGHT);
+
+        // Update screen positions for all systems that will be drawn
+        systemData.values().forEach(sys -> {
+            sys.updateScreenPosition(viewX, viewY, scale);
+        });
+
+        // Draw connections
+        gc.setLineWidth(1.0 / scale);
+        for (SystemData systemA : systemData.values()) {
+            // Skip if system is not in view or not within one hop (in normal mode)
+            if (!systemA.isInView) continue;
+            if (!debugMode && !isOneHopFromVisited(systemA)) continue;
+
+            for (int connectedId : systemA.connections) {
+                SystemData systemB = systemData.get(connectedId);
+                if (systemB == null || !systemB.isInView) continue;
+
+                // In normal mode, only draw connections to systems within one hop
+                if (!debugMode && !isOneHopFromVisited(systemB)) continue;
+
+                // Set connection color based on visited status of both systems
+                if (systemA.visited && systemB.visited) {
+                    gc.setStroke(Color.WHITE);  // Both systems visited = white connection
+                } else {
+                    gc.setStroke(Color.GRAY);   // At least one system unvisited = gray connection
+                }
+
+                gc.strokeLine(systemA.screenX, systemA.screenY,
+                        systemB.screenX, systemB.screenY);
+            }
+        }
+
+        // Draw systems
+        double dotSize = 6.0 / scale;
+        for (SystemData system : systemData.values()) {
+            // Skip if system is not in view or not within one hop (in normal mode)
+            if (!system.isInView) continue;
+            if (!debugMode && !isOneHopFromVisited(system)) continue;
+
+            // Set system color
+            if (system.id == currentSystem) {
+                gc.setFill(Color.PURPLE);
+            } else if (system.visited) {
+                gc.setFill(Color.WHITE);
+            } else {
+                gc.setFill(Color.GRAY);
+            }
+
+            gc.fillOval(
+                    system.screenX - dotSize/2,
+                    system.screenY - dotSize/2,
+                    dotSize,
+                    dotSize
+            );
+
+            // Draw system ID
+            gc.setFill(Color.CYAN);
+            gc.setFont(javafx.scene.text.Font.font(8.0 / scale));
+            gc.fillText(
+                    String.valueOf(system.id),
+                    system.screenX + dotSize,
+                    system.screenY - dotSize
+            );
+        }
+    }
+
+
+    private boolean isOneHopFromVisited(SystemData system) {
+        // If the system itself is visited, return true
+        if (system.visited) return true;
+
+        // Check if any directly connected system is visited (one hop)
+        return system.connections.stream()
+                .map(id -> systemData.get(id))
+                .anyMatch(connected -> connected != null && connected.visited);
+    }
+
+    //zoom
     private void zoom(double factor) {
+
         double newScale = scale * factor;
 
         // Enforce zoom limits
@@ -376,16 +510,23 @@ public class GalaxyMap {
             newScale = maxScale;
         }
 
-        if (currentSystem != null) {
+        if (currentSystem != 0) {
             // Convert current system coordinates to screen space
-            double screenX = (currentSystem.x + viewX) * scale + WIDTH/2;
-            double screenY = (currentSystem.y + viewY) * scale + HEIGHT/2;
+            // double screenX = (currentSystem.x + viewX) * scale + WIDTH/2;
+            //double screenY = (currentSystem.y + viewY) * scale + HEIGHT/2;
+
+
+            //Point2D.Double position = starSystemPositions.get(currentSystem);
+            Point2D.Double position = systemData.get(currentSystem).position;
+
+            Double screenX = (position.getX()+ viewX)* scale + WIDTH/2;
+            Double screenY = (position.getY()+ viewY)* scale + HEIGHT/2;
 
             scale = newScale;
 
             // Adjust view to keep current system centered
-            double newScreenX = (currentSystem.x + viewX) * scale + WIDTH/2;
-            double newScreenY = (currentSystem.y + viewY) * scale + HEIGHT/2;
+            Double newScreenX = (position.getX() + viewX) * scale + WIDTH/2;
+            Double newScreenY = (position.getY() + viewY) * scale + HEIGHT/2;
 
             viewX -= (newScreenX - screenX) / scale;
             viewY -= (newScreenY - screenY) / scale;
@@ -394,9 +535,12 @@ public class GalaxyMap {
         }
 
         draw();
+
+
     }
 
-    // Modified setupEventHandlers to use new zoom method
+
+    //setup event handlers to use zoom
     private void setupEventHandlers() {
         Canvas canvas = gc.getCanvas();
 
@@ -415,8 +559,9 @@ public class GalaxyMap {
                 double deltaX = e.getX() - lastMouseX;
                 double deltaY = e.getY() - lastMouseY;
 
-                viewX += deltaX / scale;
-                viewY += deltaY / scale;
+                // Invert the deltas for natural panning
+                viewX -= deltaX / scale;  // Changed from += to -=
+                viewY -= deltaY / scale;  // Changed from += to -=
 
                 lastMouseX = e.getX();
                 lastMouseY = e.getY();
@@ -438,231 +583,122 @@ public class GalaxyMap {
                 double zoomFactor;
                 if (e.isInertia()) {
                     // Handle trackpad gesture
-                    zoomFactor = 0.5 - e.getDeltaY() * 0.001;
+                    zoomFactor = 1.0 + e.getDeltaY() * 0.001;  // Changed from 0.5 - to 1.0 +
                 } else {
                     // Handle mouse wheel
-                    zoomFactor = e.getDeltaY() > 0 ? 1.1 : 0.9;
+                    zoomFactor = e.getDeltaY() > 0 ? 0.9 : 1.1;  // Swapped 1.1 and 0.9
                 }
                 zoom(zoomFactor);
             }
         });
-    }
 
-    // Method to update current system
-    public void setCurrentSystem(int systemId) {
-        // Find the system with the given ID
-        for (Chunk chunk : loadedChunks.values()) {
-            for (StarSystemData system : chunk.systems) {
-                if (system.id == systemId) {
-                    currentSystem = system;
-
-                    // Mark the system as visited
-                    system.visited = true;
-
-                    // Check and load neighboring chunks
-                    checkAndLoadNeighboringChunks();
-
-                    // Trigger chunk connection generation
-                    initializeChunkConnections();
-
-                    // Redraw the map
-                    //draw();
-                    return;
-                }
-            }
-        }
     }
 
 
 
-    private String determineEdge(int[] direction) {
-        if (direction[0] == -1 && direction[1] == 0) return "left";
-        if (direction[0] == 1 && direction[1] == 0) return "right";
-        if (direction[0] == 0 && direction[1] == -1) return "top";
-        if (direction[0] == 0 && direction[1] == 1) return "bottom";
-        // Diagonal cases
-        if (direction[0] == -1 && direction[1] == -1) return "top-left";
-        if (direction[0] == 1 && direction[1] == -1) return "top-right";
-        if (direction[0] == -1 && direction[1] == 1) return "bottom-left";
-        if (direction[0] == 1 && direction[1] == 1) return "bottom-right";
-        return "unknown";
+
+
+
+
+    private boolean isConnectedToVisited(SystemData system) {
+        // If the system itself is visited, return true
+        if (system.visited) return true;
+
+        // Check if any connected system is visited
+        return system.connections.stream()
+                .map(id -> systemData.get(id))
+                .anyMatch(connected -> connected != null && connected.visited);
     }
 
-    private String getOppositeEdge(String edge) {
-        switch (edge) {
-            case "left": return "right";
-            case "right": return "left";
-            case "top": return "bottom";
-            case "bottom": return "top";
-            case "top-left": return "bottom-right";
-            case "top-right": return "bottom-left";
-            case "bottom-left": return "top-right";
-            case "bottom-right": return "top-left";
-            default: return "unknown";
+    //inner class to make effeeicent drawing i hope
+
+    private class SystemData {
+        private final int id;                      // Star system ID
+        private final Point2D.Double position;     // Position on map
+        private final Set<Integer> connections;    // Connected system IDs
+
+        // States for map visualization
+        private boolean visited;           // If player has been here
+        private boolean mapProcessed;      // If system has been processed for map display
+        private boolean visibleThisFrame;  // If system should be drawn this frame
+
+        // Cached render data to avoid recalculations
+        private double screenX;           // Transformed X for current view
+        private double screenY;           // Transformed Y for current view
+        private boolean isInView;         // If system is in current viewport
+
+        public SystemData(int id, Point2D.Double position) {
+            this.id = id;
+            this.position = position;
+            this.connections = new HashSet<>();
+            this.visited = false;
+            this.mapProcessed = false;
+            this.visibleThisFrame = false;
         }
+
+        // Update screen position based on current view transform
+        public void updateScreenPosition(double viewX, double viewY, double scale) {
+            screenX = (position.x - viewX) * scale + (WIDTH / 2.0);
+            screenY = (position.y - viewY) * scale + (HEIGHT / 2.0);
+
+            // Check if system is in current viewport
+            isInView = screenX >= -50 && screenX <= WIDTH + 50 &&
+                    screenY >= -50 && screenY <= HEIGHT + 50;
+        }
+
+        // Add a connection to another system
+        public void addConnection(int targetId) {
+            connections.add(targetId);
+        }
+
+
     }
 
-    private void createChunkConnection(StarSystemData systemA, StarSystemData systemB) {
-        // Ensure systems are from different chunks
-        ChunkCoord chunkA = getChunkCoordFromSystem(systemA.x, systemA.y);
-        ChunkCoord chunkB = getChunkCoordFromSystem(systemB.x, systemB.y);
 
-        // Verify they are actually from different chunks
-        if (chunkA.equals(chunkB)) {
-            return; // No need to create connection within same chunk
-        }
+    //debug mode
 
-        // Get or create star systems for these system data points
-        StarSystem starSystemA = StarSystemCache.getInstance().get(systemA.id);
-        StarSystem starSystemB = StarSystemCache.getInstance().get(systemB.id);
 
-        // If star systems don't exist, create them
-        if (starSystemA == null) {
-            starSystemA = new StarSystem(gc, systemA.id);
-            StarSystemCache.getInstance().add(starSystemA);
-            starSystemA.setxLoc(systemA.x);
-            starSystemA.setyLoc(systemA.y);
-        }
 
-        if (starSystemB == null) {
-            starSystemB = new StarSystem(gc, systemB.id);
-            StarSystemCache.getInstance().add(starSystemB);
-            starSystemB.setxLoc(systemB.x);
-            starSystemB.setyLoc(systemB.y);
-        }
+    public void debug() {
 
+        debugMode = !debugMode;
+        draw();
         /*
-        // Create gates in both systems pointing to each other
-        // Use a fixed position near the edge of the system for the gate
-        Gate gateToB = new Gate(
-                0,  // direction (can be refined later)
-                systemB.id,
-                systemA.x % CHUNK_SIZE + 50,  // Offset from system's left edge
-                systemA.y % CHUNK_SIZE + 50,  // Offset from system's top edge
-                starSystemA,
-                270
-        );
+        if (!isOpen || !validDebug) return;
+        validDebug = false;
 
-        Gate gateToA = new Gate(
-                0,  // direction (can be refined later)
-                systemA.id,
-                systemB.x % CHUNK_SIZE + 50,  // Offset from system's left edge
-                systemB.y % CHUNK_SIZE + 50,  // Offset from system's top edge
-                starSystemB,
-                270
-        );
+        System.out.println("Debug started");
+        debugDrawMode = true;  // Enable debug drawing mode
 
+        if (expansionTimeline != null) {
+            expansionTimeline.stop();
+        }
 
+        expansionQueue.clear();
+        queuedChunks.clear();
+        isDebugExpanding = true;
+        currentWave = 0;
 
-        // Add gates to respective star systems
-        starSystemA.addGate(gateToB);
-        starSystemB.addGate(gateToA);
+        Point currentChunk = getSystemChunk(currentSystem);
+        if (currentChunk == null) return;
+
+        addExpansionWave(currentChunk, currentWave);
+        startDebugExpansion();
+
+        // Force a redraw to show all systems immediately
+        draw();
 
          */
-
-
-        System.out.println("Created chunk connection between System " + systemA.id + " and System " + systemB.id);
-    }
-    public void checkAndLoadNeighboringChunks() {
-        if (currentSystem == null) return;
-
-        // Get current chunk coordinates
-        ChunkCoord currentChunkCoord = getChunkCoordFromSystem(currentSystem.x, currentSystem.y);
-
-        // Directions to check: top-left, top, top-right, left, right, bottom-left, bottom, bottom-right
-        int[][] directions = {
-                {-1, -1}, {0, -1}, {1, -1},
-                {-1, 0},           {1, 0},
-                {-1, 1}, {0, 1}, {1, 1}
-        };
-
-        // Check and load neighboring chunks
-        for (int[] dir : directions) {
-            ChunkCoord neighborChunkCoord = new ChunkCoord(
-                    currentChunkCoord.x + dir[0],
-                    currentChunkCoord.y + dir[1]
-            );
-
-            // Only load if not already discovered
-            if (!discoveredChunks.contains(neighborChunkCoord)) {
-                // Create and add new chunk
-                Chunk newChunk = new Chunk(neighborChunkCoord);
-                discoveredChunks.add(neighborChunkCoord);
-                loadedChunks.put(neighborChunkCoord, newChunk);
-            }
-        }
-
-        initializeChunkConnections();
-
-        // trigger a redraw of the map
-        //draw();
     }
 
-    private void generateChunkConnections() {
-        // Iterate through discovered chunks
-        for (ChunkCoord currentChunkCoord : discoveredChunks) {
-            Chunk currentChunk = loadedChunks.get(currentChunkCoord);
 
-            // Directions to check: top-left, top, top-right, left, right, bottom-left, bottom, bottom-right
-            int[][] directions = {
-                    {-1, -1}, {0, -1}, {1, -1},
-                    {-1, 0},           {1, 0},
-                    {-1, 1}, {0, 1}, {1, 1}
-            };
 
-            for (int[] dir : directions) {
-                ChunkCoord neighborChunkCoord = new ChunkCoord(
-                        currentChunkCoord.x + dir[0],
-                        currentChunkCoord.y + dir[1]
-                );
-
-                // Check if neighbor chunk is discovered
-                if (discoveredChunks.contains(neighborChunkCoord)) {
-                    Chunk neighborChunk = loadedChunks.get(neighborChunkCoord);
-
-                    // Find systems near the shared edge
-                    StarSystemData currentEdgeSystem = findSystemNearestToEdge(currentChunk, getEdgeForDirection(dir));
-                    StarSystemData neighborEdgeSystem = findSystemNearestToEdge(neighborChunk, getOppositeEdge(getEdgeForDirection(dir)));
-
-                    // Create a gate between these systems
-                    if (currentEdgeSystem != null && neighborEdgeSystem != null) {
-                        createInterChunkGate(currentEdgeSystem, neighborEdgeSystem);
-                    }
-                }
-            }
-        }
+    private Point getChunkFromLocation(Point location) {
+        // Assuming chunk size is consistent with your implementation
+        return new Point(
+                (int)Math.floor(location.x / CHUNK_SIZE),
+                (int)Math.floor(location.y / CHUNK_SIZE)
+        );
     }
 
-    private void createInterChunkGate(StarSystemData fromSystem, StarSystemData toSystem) {
-        // This method would create a gate in the fromSystem's star system
-        // that leads to the toSystem's star system
-        StarSystem fromStarSystem = StarSystemCache.getInstance().get(fromSystem.id);
-
-        if (false){//fromStarSystem != null) {
-            // Create a gate in the fromStarSystem that leads to toSystem
-
-            Gate interChunkGate = new Gate(
-                    0,  // direction (can be refined)
-                    toSystem.id,  // target system ID
-                    fromSystem.x % CHUNK_SIZE,  // x position within the system
-                    fromSystem.y % CHUNK_SIZE,  // y position within the system
-                    fromStarSystem,  // parent star system
-                    270
-            );
-
-
-
-            // Add the gate to the star system
-            fromStarSystem.addGate(interChunkGate);
-        }
-    }
-
-    private String getEdgeForDirection(int[] direction) {
-        if (direction[0] == -1 && direction[1] == 0) return "left";
-        if (direction[0] == 1 && direction[1] == 0) return "right";
-        if (direction[0] == 0 && direction[1] == -1) return "top";
-        if (direction[0] == 0 && direction[1] == 1) return "bottom";
-        // Add more specific handling for diagonal directions if needed
-        return "unknown";
-    }
 }

@@ -99,5 +99,10 @@ public class Player {
    public void setSystem(StarSystem sys) {
       currentSystem = sys;
       GalaxyMap.getInstance().setCurrentSystem(currentSystem.getID());
+
+      // gate stops player, maybe we can add a slight movement in out direction
+      PlayerMovementState.getInstance().stop();
    }
+
+
 }

@@ -52,10 +52,7 @@ public class StarSystem {
       Random rand = new Random();
       int numPlanets = rand.nextInt(5) + 1;  // Random number between 1 and 5
       int numAsteroids = rand.nextInt(5) + 1; // Random number between 1 and 5
-      
-      // Set number of gates from an outside input
-      //until then it is 2 ;)
-      int numGates = 2;
+
       
       this.planets = new ArrayList<>();
       this.asteroids = new ArrayList<>();
@@ -76,7 +73,7 @@ public class StarSystem {
          int radians = rand.nextInt(100);
          int distance = rand.nextInt(maxDistance - minDistance + 1) + minDistance;
          this.planets.add(new Planet(color, distance, radians, radius, 30));
-         System.out.println("new planet");
+         //System.out.println("new planet");
       }
       
               // Generate asteroids
@@ -92,28 +89,10 @@ public class StarSystem {
          double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
       
          this.asteroids.add(new Asteroid((double)asteroidDistance, position, (double)radius, speed));
-         System.out.println("new asteroid");
+         //System.out.println("new asteroid");
       }
       
 
-      //add gates
-      for (int i = 0; i < numGates; i++) {
-          //still need to get accurate next system. rn im just doing +1
-          // this rand allows for gates to spawn in orbit path. this needs to be fixed.
-
-
-          //this.gates.add(new Gate( 0, ID+1, rand.nextInt(700), rand.nextInt(400), this, 90));
-          //maybe get target systems for sstar system cache
-
-          //Random rand = new Random();
-          // First gate connects to previous system (ID - 1)
-          if (ID > 0) {
-              this.gates.add(new Gate(0, ID - 1, rand.nextInt(700), rand.nextInt(400), this, 90));
-
-          }
-          // Second gate connects to next system (ID + 1)
-          this.gates.add(new Gate(0, ID + 1, rand.nextInt(700), rand.nextInt(400), this, 90));
-      }
       int numStars = 100000; // Number of stars to draw
       for (int i = 0; i < numStars; i++) {
           // Generate random positions within a 4000x2250 space
@@ -143,8 +122,6 @@ public class StarSystem {
         this.planets.add(new Planet(color, distance, 30, radius, 1));
     }
       */
-      // Fill the gates arraylist
-   
       
    }
    public Point2D getValidGateSpawn(String generalArea) {
@@ -269,6 +246,7 @@ public class StarSystem {
                 gate.activate(gc);
                 return;
             }
+
         }
     }
     public void checkPlayerAsteroidCollisions(Player player) {

@@ -60,11 +60,38 @@ public class StarSystemCache {
     }
 
     // Create a new star system and add it to the cache
-    public StarSystem createSystem(GraphicsContext gc) {
+    public int createSystem(GraphicsContext gc) {
         StarSystem newSystem = new StarSystem(gc, -1);
         add(newSystem);
-        return newSystem;
+        return newSystem.getID();
     }
+
+    //add gates to starsystem gates list
+   /*
+    public void assignGates(int ssID, List<Integer>targetIDs){
+
+        //create gate
+        for(int i=0; i<targetIDs.size(); i++){
+
+            //make sure gate doesnt go to self
+            if(ssID != targetIDs.get(i)){
+                int direction=0;
+                int targetSystem=targetIDs.get(i);
+                double x=0;
+                double y=0;
+                //getValidGateSpawn(string generalArea)
+                get(ssID).addGate(new Gate(direction,targetSystem,x,y,ssID));
+            }
+
+
+        }
+
+
+
+
+
+    }
+    */
 
     // Create a new star system with a specific location
     public StarSystem createSystem(GraphicsContext gc, double x, double y) {

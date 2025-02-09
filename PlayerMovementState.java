@@ -36,6 +36,7 @@ public class PlayerMovementState {
       if (instance == null) { instance = new PlayerMovementState(); }
       return instance;
    }
+
    public void stopRight() { 
        movingRight = false; 
    }
@@ -105,5 +106,10 @@ public class PlayerMovementState {
       }
       Player.getInstance().moveXBy(deltaX);
       Player.getInstance().moveYBy(deltaY);
+   }
+
+   public void stop(){
+      deltaX =0;
+      deltaY =0;
    }
 }

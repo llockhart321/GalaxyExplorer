@@ -26,5 +26,8 @@ public class KeyListenerDown implements EventHandler<KeyEvent> {
 
 
       }
+      if(event.getCode() == KeyCode.X){
+         GalaxyMap.getInstance().debug();
+      }
    }
 }

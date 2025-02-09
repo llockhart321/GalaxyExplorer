@@ -34,8 +34,10 @@ public class Main extends Application {
       
       //set player start system
 
-      StarSystem startSystem = new StarSystem(gc, -1);
-      StarSystemCache.getInstance().add(startSystem);
+      //StarSystem startSystem = new StarSystem(gc, -1);
+      //StarSystemCache.getInstance().add(startSystem);
+      GalaxyMap.getInstance().createChunk(0,0);
+      GalaxyMap.getInstance().setCurrentSystem(0);
 
       
       // Set up Animation
@@ -43,8 +45,12 @@ public class Main extends Application {
       
       //get map ready
       GalaxyMap.getInstance().set(gc, ah);
-      Player.getInstance().setSystem(startSystem);
-      
+      System.out.println("printing all systems: "+StarSystemCache.getInstance().getAllSystems());
+      System.out.println("system 1: "+StarSystemCache.getInstance().get(0));
+      //StarSystemCache.getInstance().getAllSystems();
+      //System.out.println("\nWHERE BUG\n");
+      Player.getInstance().setSystem(StarSystemCache.getInstance().get(0));
+
       ah.start();
    
       // Set the scene and display the stage
