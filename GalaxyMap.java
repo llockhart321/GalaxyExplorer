@@ -86,6 +86,10 @@ public class GalaxyMap {
     private int currentSystem = 0; // Track current system for zoom centering
 
     //private  Map<Point, List<Integer>> chunks = new HashMap<>();
+
+    List<Integer> origin = new ArrayList<>();
+    private Point currentChunk;
+
     private Map<Point, Set<Integer>> chunks = new HashMap<>();
 
 
@@ -218,21 +222,33 @@ public class GalaxyMap {
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX-1, chunkLocY), "left").id));
             SystemData left =findSystemNearestToEdge(chunk, "left");
             assignGates(allStarSystems.get(left.id), targetSys);
+            // now give gate to target going to left.id
+            origin = new ArrayList<>(List.of(allStarSystems.get(left.id)));
+            assignGates(targetSys.get(0), origin);
 
             //find right neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX+1, chunkLocY), "right").id));
             SystemData right =findSystemNearestToEdge(chunk, "right");
             assignGates(allStarSystems.get(right.id), targetSys);
+            // now give gate to target going to origin.id
+            origin = new ArrayList<>(List.of(allStarSystems.get(right.id)));
+            assignGates(targetSys.get(0), origin);
 
             //find bottom neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY+1), "bottom").id));
             SystemData bottom =findSystemNearestToEdge(chunk, "bottom");
             assignGates(allStarSystems.get(bottom.id), targetSys);
+            // now give gate to target going to origin.id
+            origin = new ArrayList<>(List.of(allStarSystems.get(bottom.id)));
+            assignGates(targetSys.get(0), origin);
 
             //find top neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY-1), "top").id));
             SystemData top =findSystemNearestToEdge(chunk, "top");
             assignGates(allStarSystems.get(top.id), targetSys);
+            // now give gate to target going to origin.id
+            origin = new ArrayList<>(List.of(allStarSystems.get(top.id)));
+            assignGates(targetSys.get(0), origin);
 
         }
     }
@@ -378,7 +394,24 @@ public class GalaxyMap {
         // set current system.
         currentSystem = systemId;
         systemData.get(currentSystem).visited=true;
+
+
+        currentSystem = systemId;
+        systemData.get(currentSystem).visited=true;
         // check if we need to load neighboring chunk
+        if(systemId ==0){
+            currentChunk = new Point(0,0);
+        }
+        else{
+            if(currentChunk != getSystemChunk(currentSystem)){
+                // do the stuff
+                //currentChunk = getSystemChunk(currentSystem);
+                //handleNeighbors();
+            }
+        }
+        currentChunk = getSystemChunk(currentSystem);
+
+        testPrint();
 
     }
     
@@ -391,6 +424,7 @@ public class GalaxyMap {
     public void mapAction() {
         if (!isOpen) {
             isOpen = true;
+            PlayerMovementState.getInstance().stop();
             ah.stop();
             setupEventHandlers();
             draw();
@@ -786,5 +820,45 @@ public class GalaxyMap {
                 (int)Math.floor(location.y / CHUNK_SIZE)
         );
     }
+
+
+    // test print out some impoertant info of current sys
+    private void testPrint(){
+
+        System.out.print("\ncurrently in "+currentSystem);
+
+
+        List<Gate> gates = StarSystemCache.getInstance().get(currentSystem).getGates();
+        System.out.println(" ");
+        int gateCount = gates.size();
+        System.out.print("which has gates going to: ");
+        for(Gate g : gates){
+            System.out.print(" "+g.getTargetSystem()+", ");
+        }
+        System.out.println(' ');
+        Point chunk = getSystemChunk(currentSystem);
+        int chunkLocX = (int)chunk.getX();
+        int chunkLocY = (int)chunk.getY();
+
+        int leftTarget = findSystemNearestToEdge(new Point(chunkLocX-1, chunkLocY), "left").id;
+        int left =findSystemNearestToEdge(chunk, "left").id;
+        System.out.println("left ss "+left+" should go to "+leftTarget);
+
+        int rightTarget = findSystemNearestToEdge(new Point(chunkLocX+1, chunkLocY), "right").id;
+        int right =findSystemNearestToEdge(chunk, "right").id;
+        System.out.println("right ss "+right+" should go to "+rightTarget);
+
+        int bottomTarget = findSystemNearestToEdge(new Point(chunkLocX, chunkLocY+1), "bottom").id;
+        int bottom =findSystemNearestToEdge(chunk, "bottom").id;
+        System.out.println("bottom ss "+bottom+" should go to "+bottomTarget);
+
+        int topTarget = findSystemNearestToEdge(new Point(chunkLocX, chunkLocY-1), "top").id;
+        int top =findSystemNearestToEdge(chunk, "top").id;
+        System.out.println("top ss "+top+" should go to "+topTarget);
+
+    }
+
+
+
 
 }
