@@ -406,7 +406,9 @@ public class GalaxyMap {
 
     public void closeMap() {
         isOpen = false;
+        isSpawning = false;
         debugMode = false;
+
 
         /*
         isOpen = false;
@@ -427,6 +429,7 @@ public class GalaxyMap {
         // Clear background
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, WIDTH, HEIGHT);
+
 
         // Update screen positions for all systems that will be drawn
         systemData.values().forEach(sys -> {
@@ -675,73 +678,104 @@ public class GalaxyMap {
 
     //debug mode
 
+    private int debugChunksSpawned = 0;
+    private int debugSpawnAmount = 260; // Total chunks to spawn
+    private int spawnEachTickAmount = 2; // How many to spawn per tick
+    private int x = 0, y = 0;
+    private int dx = 1, dy = 0;
+    private int stepSize = 1;
+    private int stepsTaken = 0;
+    private int directionChanges = 0;
+    private boolean isSpawning = false;
+    private Timeline debugUpdater;
+    private long lastTickTime = System.nanoTime();
+    private final long MAX_TICK_TIME_NS = 4_000_000_000L; // 5000ms (5 seconds) in nanoseconds
 
 
     public void debug() {
 
+        if(!isOpen){
+            isSpawning = false;
+            debugMode = false;
+            return;
+        }
+
         debugMode = !debugMode;
         draw();
 
+        if (!isSpawning) {
+            lastTickTime = System.nanoTime();
+            debugChunksSpawned = 0;
+            x = 0;
+            y = 0;
+            dx = 1;
+            dy = 0;
+            stepSize = 1;
+            stepsTaken = 0;
+            directionChanges = 0;
+            isSpawning = true;
+
+            // Start a repeating task to update debug spawning
+            debugUpdater = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+                updateDebugSpawning();
+                draw(); // Force a redraw every tick
+            }));
+            debugUpdater.setCycleCount(Timeline.INDEFINITE);
+            debugUpdater.play();
+        }
+        else{
+            isSpawning = false;
+        }
+
+    }
 
 
-        int x = 0;
-        int y = 0;
-        int dx = 1, dy = 0; // Start moving right
-        int stepSize = 1; // Steps before turning
-        int stepsTaken = 0;
-        int directionChanges = 0;
+    public void updateDebugSpawning() {
+        if (!isSpawning) return; // Stop if spawning was disabled externally
 
-        for (int i = 0; i < 100; i++) {
-            createChunk(x, y); // Create the chunk at (x, y)
+        long startTime = System.nanoTime();
+
+        // If the last tick was too slow, stop spawning
+        long elapsed = startTime - lastTickTime;
+        if (elapsed > MAX_TICK_TIME_NS) {
+            System.out.println("Tick took too long (" + (elapsed / 1_000_000) + "ms), stopping spawning.");
+            isSpawning = false; // Prevent further spawning
+            return;
+        }
+
+        int spawnLimit = spawnEachTickAmount;
+
+        // Adjust spawn rate dynamically (increase if fast, decrease if slow)
+        if (elapsed < 16_000_000) { // Less than 16ms (60 FPS)
+            spawnLimit *= 2; // Speed up if fast
+        } else if (elapsed > 33_000_000) { // More than 33ms (30 FPS)
+            spawnLimit = Math.max(1, spawnLimit / 2); // Slow down if lagging
+        }
+
+        // Spawn chunks
+        for (int i = 0; i < spawnLimit && debugChunksSpawned < debugSpawnAmount; i++) {
+            createChunk(x, y);
             x += dx;
             y += dy;
             stepsTaken++;
+            debugChunksSpawned++;
 
-            // Change direction if we reach stepSize
             if (stepsTaken == stepSize) {
                 stepsTaken = 0;
                 directionChanges++;
-
-                // Rotate direction (right → down → left → up)
                 int temp = dx;
                 dx = -dy;
                 dy = temp;
-
-                // Increase step size after two direction changes (completing a full "square")
-                if (directionChanges % 2 == 0) {
-                    stepSize++;
-                }
+                if (directionChanges % 2 == 0) stepSize++;
             }
         }
 
-
-        /*
-        if (!isOpen || !validDebug) return;
-        validDebug = false;
-
-        System.out.println("Debug started");
-        debugDrawMode = true;  // Enable debug drawing mode
-
-        if (expansionTimeline != null) {
-            expansionTimeline.stop();
-        }
-
-        expansionQueue.clear();
-        queuedChunks.clear();
-        isDebugExpanding = true;
-        currentWave = 0;
-
-        Point currentChunk = getSystemChunk(currentSystem);
-        if (currentChunk == null) return;
-
-        addExpansionWave(currentChunk, currentWave);
-        startDebugExpansion();
-
-        // Force a redraw to show all systems immediately
-        draw();
-
-         */
+        lastTickTime = System.nanoTime();
     }
+
+
+
+
 
 
 
