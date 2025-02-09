@@ -132,6 +132,7 @@ public class GalaxyMap {
         //create chunk in chunks list
         //chunks.putIfAbsent(chunk, new ArrayList<>());
         chunks.putIfAbsent(chunk, new HashSet<>());
+        
 
 
 
@@ -460,16 +461,17 @@ public class GalaxyMap {
         // Draw connections
         gc.setLineWidth(1.0 / scale);
         for (SystemData systemA : systemData.values()) {
-            // Skip if system is not in view or not within one hop (in normal mode)
+            // Skip if system is not in view
             if (!systemA.isInView) continue;
+            // In normal mode, skip if not within one hop
             if (!debugMode && !isOneHopFromVisited(systemA)) continue;
 
             for (int connectedId : systemA.connections) {
                 SystemData systemB = systemData.get(connectedId);
                 if (systemB == null || !systemB.isInView) continue;
 
-                // In normal mode, only draw connections to systems within one hop
-                if (!debugMode && !isOneHopFromVisited(systemB)) continue;
+                // Only draw connection if it meets our criteria
+                if (!shouldDrawConnection(systemA, systemB)) continue;
 
                 // Set connection color based on visited status of both systems
                 if (systemA.visited && systemB.visited) {
@@ -486,8 +488,9 @@ public class GalaxyMap {
         // Draw systems
         double dotSize = 6.0 / scale;
         for (SystemData system : systemData.values()) {
-            // Skip if system is not in view or not within one hop (in normal mode)
+            // Skip if system is not in view
             if (!system.isInView) continue;
+            // In normal mode, skip if not within one hop
             if (!debugMode && !isOneHopFromVisited(system)) continue;
 
             // Set system color
@@ -517,6 +520,13 @@ public class GalaxyMap {
         }
     }
 
+    private boolean shouldDrawConnection(SystemData systemA, SystemData systemB) {
+        // Always draw connections between visited systems
+        if (systemA.visited && systemB.visited) return true;
+
+        // Draw connection if one system is visited and the other is unvisited
+        return (systemA.visited && !systemB.visited) || (!systemA.visited && systemB.visited);
+    }
 
     private boolean isOneHopFromVisited(SystemData system) {
         // If the system itself is visited, return true
@@ -695,6 +705,40 @@ public class GalaxyMap {
 
         debugMode = !debugMode;
         draw();
+
+
+
+        int x = 0;
+        int y = 0;
+        int dx = 1, dy = 0; // Start moving right
+        int stepSize = 1; // Steps before turning
+        int stepsTaken = 0;
+        int directionChanges = 0;
+
+        for (int i = 0; i < 100; i++) {
+            createChunk(x, y); // Create the chunk at (x, y)
+            x += dx;
+            y += dy;
+            stepsTaken++;
+
+            // Change direction if we reach stepSize
+            if (stepsTaken == stepSize) {
+                stepsTaken = 0;
+                directionChanges++;
+
+                // Rotate direction (right → down → left → up)
+                int temp = dx;
+                dx = -dy;
+                dy = temp;
+
+                // Increase step size after two direction changes (completing a full "square")
+                if (directionChanges % 2 == 0) {
+                    stepSize++;
+                }
+            }
+        }
+
+
         /*
         if (!isOpen || !validDebug) return;
         validDebug = false;
