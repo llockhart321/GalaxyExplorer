@@ -85,8 +85,6 @@ public class GalaxyMap {
     // all the chunks and their star systems
     private int currentSystem = 0; // Track current system for zoom centering
 
-    private Point currentChunk;
-
     //private  Map<Point, List<Integer>> chunks = new HashMap<>();
     private Map<Point, Set<Integer>> chunks = new HashMap<>();
 
@@ -107,6 +105,7 @@ public class GalaxyMap {
     private GalaxyMap() {
 
     }
+    
     public static GalaxyMap getInstance() {
         if (instance == null) {
             instance = new GalaxyMap();
@@ -206,10 +205,7 @@ public class GalaxyMap {
         List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
 
 
-
         List<Integer> targetSys = new ArrayList<>();
-        List<Integer> origin = new ArrayList<>();
-
 
         if(getSystemChunk(currentSystem) == chunk){
 
@@ -217,34 +213,21 @@ public class GalaxyMap {
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX-1, chunkLocY), "left").id));
             SystemData left =findSystemNearestToEdge(chunk, "left");
             assignGates(allStarSystems.get(left.id), targetSys);
-            // now give gate to target going to left.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(left.id)));
-            assignGates(targetSys.get(0), origin);
-
 
             //find right neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX+1, chunkLocY), "right").id));
             SystemData right =findSystemNearestToEdge(chunk, "right");
             assignGates(allStarSystems.get(right.id), targetSys);
-            // now give gate to target going to origin.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(right.id)));
-            assignGates(targetSys.get(0), origin);
 
             //find bottom neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY+1), "bottom").id));
             SystemData bottom =findSystemNearestToEdge(chunk, "bottom");
             assignGates(allStarSystems.get(bottom.id), targetSys);
-            // now give gate to target going to origin.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(bottom.id)));
-            assignGates(targetSys.get(0), origin);
 
             //find top neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY-1), "top").id));
             SystemData top =findSystemNearestToEdge(chunk, "top");
             assignGates(allStarSystems.get(top.id), targetSys);
-            // now give gate to target going to origin.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(top.id)));
-            assignGates(targetSys.get(0), origin);
 
         }
     }
@@ -391,22 +374,9 @@ public class GalaxyMap {
         currentSystem = systemId;
         systemData.get(currentSystem).visited=true;
         // check if we need to load neighboring chunk
-        if(systemId ==0){
-            currentChunk = new Point(0,0);
-        }
-        else{
-            if(currentChunk != getSystemChunk(currentSystem)){
-
-                // do the stuff
-                //currentChunk = getSystemChunk(currentSystem);
-                //handleNeighbors();
-            }
-        }
-
-        currentChunk = getSystemChunk(currentSystem);
-
 
     }
+    
 
 
 
@@ -459,7 +429,7 @@ public class GalaxyMap {
         });
 
         // Draw connections
-        gc.setLineWidth(1.0 / scale);
+        gc.setLineWidth(1.0 * scale);
         for (SystemData systemA : systemData.values()) {
             // Skip if system is not in view
             if (!systemA.isInView) continue;
@@ -486,7 +456,7 @@ public class GalaxyMap {
         }
 
         // Draw systems
-        double dotSize = 6.0 / scale;
+        double dotSize = 6.0 * scale;
         for (SystemData system : systemData.values()) {
             // Skip if system is not in view
             if (!system.isInView) continue;
@@ -511,7 +481,7 @@ public class GalaxyMap {
 
             // Draw system ID
             gc.setFill(Color.CYAN);
-            gc.setFont(javafx.scene.text.Font.font(8.0 / scale));
+            gc.setFont(javafx.scene.text.Font.font(8.0 * scale));
             gc.fillText(
                     String.valueOf(system.id),
                     system.screenX + dotSize,
@@ -538,48 +508,45 @@ public class GalaxyMap {
                 .anyMatch(connected -> connected != null && connected.visited);
     }
 
-    //zoom
     private void zoom(double factor) {
-
-        double newScale = scale * factor;
-
-        // Enforce zoom limits
-        if (newScale < minScale) {
-            factor = minScale / scale;
-            newScale = minScale;
-        } else if (newScale > maxScale) {
-            factor = maxScale / scale;
-            newScale = maxScale;
-        }
-
-        if (currentSystem != 0) {
-            // Convert current system coordinates to screen space
-            // double screenX = (currentSystem.x + viewX) * scale + WIDTH/2;
-            //double screenY = (currentSystem.y + viewY) * scale + HEIGHT/2;
-
-
-            //Point2D.Double position = starSystemPositions.get(currentSystem);
-            Point2D.Double position = systemData.get(currentSystem).position;
-
-            Double screenX = (position.getX()+ viewX)* scale + WIDTH/2;
-            Double screenY = (position.getY()+ viewY)* scale + HEIGHT/2;
-
-            scale = newScale;
-
-            // Adjust view to keep current system centered
-            Double newScreenX = (position.getX() + viewX) * scale + WIDTH/2;
-            Double newScreenY = (position.getY() + viewY) * scale + HEIGHT/2;
-
-            viewX -= (newScreenX - screenX) / scale;
-            viewY -= (newScreenY - screenY) / scale;
-        } else {
-            scale = newScale;
-        }
-
-        draw();
-
-
+    // Calculate new scale while respecting bounds
+    double newScale = scale * factor;
+    if (newScale < minScale) {
+        newScale = minScale;
+    } else if (newScale > maxScale) {
+        newScale = maxScale;
     }
+    
+    // Only adjust view if we have a current system
+    if (currentSystem != 0) {
+        SystemData currentSysData = systemData.get(currentSystem);
+        if (currentSysData != null) {
+            // Get the current system's position
+            Point2D.Double sysPos = currentSysData.position;
+            
+            // Calculate the system's screen position before zoom
+            double oldScreenX = (sysPos.x * scale) - (viewX * scale) + (WIDTH / 2);
+            double oldScreenY = (sysPos.y * scale) - (viewY * scale) + (HEIGHT / 2);
+            
+            // Update scale
+            scale = newScale;
+            
+            // Calculate the system's screen position after zoom
+            double newScreenX = (sysPos.x * scale) - (viewX * scale) + (WIDTH / 2);
+            double newScreenY = (sysPos.y * scale) - (viewY * scale) + (HEIGHT / 2);
+            
+            // Adjust view position to maintain system position
+            viewX += (newScreenX - oldScreenX) * scale;
+            viewY += (newScreenY - oldScreenY) * scale;
+        }
+    } else {
+        // If no current system, just update scale
+        scale = newScale;
+    }
+    
+    // Redraw the map
+    draw();
+}
 
 
     //setup event handlers to use zoom
@@ -625,7 +592,7 @@ public class GalaxyMap {
                 double zoomFactor;
                 if (e.isInertia()) {
                     // Handle trackpad gesture
-                    zoomFactor = 1.0 + e.getDeltaY() * 0.001;  // Changed from 0.5 - to 1.0 +
+                    zoomFactor = 1.0 + e.getDeltaY() * 0.000001;  // Changed from 0.5 - to 1.0 +
                 } else {
                     // Handle mouse wheel
                     zoomFactor = e.getDeltaY() > 0 ? 0.9 : 1.1;  // Swapped 1.1 and 0.9
