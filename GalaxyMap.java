@@ -128,6 +128,7 @@ public class GalaxyMap {
     public  void createChunk(int chunkLocX, int chunkLocY){
 
 
+
         //get chunks coords.
         //Point chunk = determineChunkLoc();
         Point chunk = new Point(chunkLocX, chunkLocY);
@@ -140,7 +141,7 @@ public class GalaxyMap {
         }
 
         chunks.putIfAbsent(chunk, new HashSet<>());
-        
+
 
 
 
@@ -151,6 +152,7 @@ public class GalaxyMap {
         Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount);
 
         // add ss' to chunk
+
         for(int i=0; i<ssCount; i++) {
             //first create system
             int newSys = StarSystemCache.getInstance().createSystem(gc);
@@ -172,11 +174,14 @@ public class GalaxyMap {
         //List<Integer> allStarSystems = chunks.getOrDefault(chunk, Collections.emptyList());
         Set<Integer> allStarSystemsSet = chunks.getOrDefault(chunk, Collections.emptySet());
 
+
         System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
 
         List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
         //assign gates
-        for(int i=0; i<allStarSystems.size(); i++){
+        for(Integer systemId : allStarSystems){
+            assignGates(systemId, allStarSystems);
+        }
 
             //chunks.getOrDefault(new Point(0, 0), Collections.emptyList())
             //find possible connections for current ss
@@ -186,14 +191,14 @@ public class GalaxyMap {
             // make a map :( of allstarsystems and their general area string
 
             //add gates to each ss
-            assignGates(allStarSystems.get(i), allStarSystems);
+            //assignGates(allStarSystems.get(i), allStarSystems);
 
             // find ss' on edges to go to other chunks
             // make the gates to go to other edges.
 
 
 
-        }
+
 
 
         handleNeighbors();
@@ -221,33 +226,50 @@ public class GalaxyMap {
             //find left neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX-1, chunkLocY), "left").id));
             SystemData left =findSystemNearestToEdge(chunk, "left");
-            assignGates(allStarSystems.get(left.id), targetSys);
+
+
+            // the issue VVVV
+            ///assignGates(allStarSystems.get(left.id), targetSys);
+
+            assignGates(left.id, targetSys);
+
+
+            System.out.println("teststerte3");
             // now give gate to target going to left.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(left.id)));
+            //origin = new ArrayList<>(List.of(allStarSystems.get(left.id)));
+            origin = new ArrayList<>(List.of(left.id));
+
+            System.out.println("teststerte");
             assignGates(targetSys.get(0), origin);
+            System.out.println("teststerte2");
+
 
             //find right neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX+1, chunkLocY), "right").id));
             SystemData right =findSystemNearestToEdge(chunk, "right");
-            assignGates(allStarSystems.get(right.id), targetSys);
+            //assignGates(allStarSystems.get(right.id), targetSys);
+            assignGates(right.id, targetSys);
             // now give gate to target going to origin.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(right.id)));
+            origin = new ArrayList<>(List.of(right.id));
             assignGates(targetSys.get(0), origin);
 
             //find bottom neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY+1), "bottom").id));
             SystemData bottom =findSystemNearestToEdge(chunk, "bottom");
-            assignGates(allStarSystems.get(bottom.id), targetSys);
+            //assignGates(allStarSystems.get(bottom.id), targetSys);
+            assignGates(bottom.id, targetSys);
             // now give gate to target going to origin.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(bottom.id)));
+            origin = new ArrayList<>(List.of(bottom.id));
             assignGates(targetSys.get(0), origin);
 
             //find top neighbor connection
             targetSys = new ArrayList<>(List.of(findSystemNearestToEdge(new Point(chunkLocX, chunkLocY-1), "top").id));
             SystemData top =findSystemNearestToEdge(chunk, "top");
-            assignGates(allStarSystems.get(top.id), targetSys);
+            //assignGates(allStarSystems.get(top.id), targetSys);
+            assignGates(top.id, targetSys);
             // now give gate to target going to origin.id
-            origin = new ArrayList<>(List.of(allStarSystems.get(top.id)));
+            origin = new ArrayList<>(List.of(top.id));
+
             assignGates(targetSys.get(0), origin);
 
         }
@@ -406,7 +428,7 @@ public class GalaxyMap {
             if(currentChunk != getSystemChunk(currentSystem)){
                 // do the stuff
                 //currentChunk = getSystemChunk(currentSystem);
-                //handleNeighbors();
+                handleNeighbors();
             }
         }
         currentChunk = getSystemChunk(currentSystem);
@@ -840,21 +862,40 @@ public class GalaxyMap {
         int chunkLocX = (int)chunk.getX();
         int chunkLocY = (int)chunk.getY();
 
+        System.out.println("l1");
+
         int leftTarget = findSystemNearestToEdge(new Point(chunkLocX-1, chunkLocY), "left").id;
+        System.out.println("l2");
+
         int left =findSystemNearestToEdge(chunk, "left").id;
         System.out.println("left ss "+left+" should go to "+leftTarget);
 
+        System.out.println("r1");
         int rightTarget = findSystemNearestToEdge(new Point(chunkLocX+1, chunkLocY), "right").id;
+        System.out.println("r2");
+
         int right =findSystemNearestToEdge(chunk, "right").id;
         System.out.println("right ss "+right+" should go to "+rightTarget);
 
+        System.out.println("b1");
         int bottomTarget = findSystemNearestToEdge(new Point(chunkLocX, chunkLocY+1), "bottom").id;
+        System.out.println("b2");
+
         int bottom =findSystemNearestToEdge(chunk, "bottom").id;
         System.out.println("bottom ss "+bottom+" should go to "+bottomTarget);
 
+        System.out.println("bouttatopt");
         int topTarget = findSystemNearestToEdge(new Point(chunkLocX, chunkLocY-1), "top").id;
+        System.out.println("bouttatop");
         int top =findSystemNearestToEdge(chunk, "top").id;
+        System.out.println("success!");
+
         System.out.println("top ss "+top+" should go to "+topTarget);
+
+
+        System.out.println("all chunks"+chunks);
+        System.out.println("all systems"+systemData);
+
 
     }
 
