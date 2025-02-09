@@ -130,6 +130,11 @@ public class GalaxyMap {
 
         //create chunk in chunks list
         //chunks.putIfAbsent(chunk, new ArrayList<>());
+
+        if(chunks.containsKey(chunk)){
+            return;
+        }
+
         chunks.putIfAbsent(chunk, new HashSet<>());
         
 
@@ -651,8 +656,12 @@ public class GalaxyMap {
             screenY = (position.y - viewY) * scale + (HEIGHT / 2.0);
 
             // Check if system is in current viewport
-            isInView = screenX >= -50 && screenX <= WIDTH + 50 &&
-                    screenY >= -50 && screenY <= HEIGHT + 50;
+            isInView = screenX >= -400 && screenX <= WIDTH + 400 &&
+                    screenY >= -400 && screenY <= HEIGHT + 400;
+            //isInView = true;
+
+
+
         }
 
         // Add a connection to another system
