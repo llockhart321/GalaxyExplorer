@@ -426,7 +426,7 @@ public class GalaxyMap {
         });
 
         // Draw connections
-        gc.setLineWidth(1.0 / scale);
+        gc.setLineWidth(1.0 * scale);
         for (SystemData systemA : systemData.values()) {
             // Skip if system is not in view or not within one hop (in normal mode)
             if (!systemA.isInView) continue;
@@ -452,7 +452,7 @@ public class GalaxyMap {
         }
 
         // Draw systems
-        double dotSize = 6.0 / scale;
+        double dotSize = 6.0 * scale;
         for (SystemData system : systemData.values()) {
             // Skip if system is not in view or not within one hop (in normal mode)
             if (!system.isInView) continue;
@@ -583,7 +583,7 @@ public class GalaxyMap {
                 double zoomFactor;
                 if (e.isInertia()) {
                     // Handle trackpad gesture
-                    zoomFactor = 1.0 + e.getDeltaY() * 0.001;  // Changed from 0.5 - to 1.0 +
+                    zoomFactor = 1.0 + e.getDeltaY() * 0.000000001;  // Changed from 0.5 - to 1.0 +
                 } else {
                     // Handle mouse wheel
                     zoomFactor = e.getDeltaY() > 0 ? 0.9 : 1.1;  // Swapped 1.1 and 0.9
