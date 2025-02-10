@@ -149,7 +149,7 @@ public class GalaxyMap {
         int ssCount = random.nextInt(3,5);
 
         //get ss coordinates to draw in map to make spiral
-        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount);
+        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount, chunk);
 
         // add ss' to chunk
 
@@ -371,7 +371,7 @@ public class GalaxyMap {
         }
         return coords;
     }*/
-    private Deque<Point2D.Double> determineStarSystemCoords(int ssCount) {
+    private Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
     Deque<Point2D.Double> coords = new ArrayDeque<>();
     
     // Get the chunk bounds (assuming we're working in a single chunk)
@@ -407,7 +407,9 @@ public class GalaxyMap {
         // Ensure points stay within bounds
         x = Math.max(minX + 50, Math.min(x, maxX - 50));
         y = Math.max(minY + 50, Math.min(y, maxY - 50));
-        
+
+        x+=chunk.getX()*CHUNK_SIZE;
+        y+=chunk.getY()*CHUNK_SIZE;
         coords.add(new Point2D.Double(x, y));
     }
     
@@ -861,7 +863,7 @@ public class GalaxyMap {
     //debug mode
 
     private int debugChunksSpawned = 0;
-    private int debugSpawnAmount = 50; //260; // Total chunks to spawn
+    private int debugSpawnAmount = 250; //260; // Total chunks to spawn
     private int spawnEachTickAmount = 2; // How many to spawn per tick
     private int x = 0, y = 0;
     private int dx = 1, dy = 0;
