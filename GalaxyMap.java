@@ -78,7 +78,7 @@ public class GalaxyMap {
 
 
 
-    private int CHUNK_SIZE = 50;
+    private int CHUNK_SIZE = 100;
 
 
 
@@ -357,7 +357,7 @@ public class GalaxyMap {
 
 
 
-    private  Deque<Point2D.Double> determineStarSystemCoords(int ssCount){
+    /*private  Deque<Point2D.Double> determineStarSystemCoords(int ssCount){
 
         //wizard level code to find spiral locations ;)
 
@@ -370,12 +370,49 @@ public class GalaxyMap {
 
         }
         return coords;
+    }*/
+    private Deque<Point2D.Double> determineStarSystemCoords(int ssCount) {
+    Deque<Point2D.Double> coords = new ArrayDeque<>();
+    
+    // Get the chunk bounds (assuming we're working in a single chunk)
+    double minX = 0;
+    double maxX = 800;  // Match the WIDTH constant
+    double minY = 0;
+    double maxY = 450;  // Match the HEIGHT constant
+    
+    // Center point for the spiral
+    double centerX = (maxX + minX) / 2.0;
+    double centerY = (maxY + minY) / 2.0;
+    
+    // Spiral parameters
+    double initialRadius = 50;  // Starting radius
+    double growthFactor = 0.3;  // How quickly the spiral expands
+    double angleStep = 2 * Math.PI / ssCount;  // Even distribution of points
+    
+    for (int i = 0; i < ssCount; i++) {
+        // Calculate angle and radius
+        double angle = i * angleStep;
+        double radius = initialRadius + (growthFactor * angle);
+        
+        // Calculate base position
+        double x = centerX + (radius * Math.cos(angle));
+        double y = centerY + (radius * Math.sin(angle));
+        
+        // Add some random variation
+        double randomRadius = random.nextDouble(0, 20);
+        double randomAngle = random.nextDouble(0, 2 * Math.PI);
+        x += randomRadius * Math.cos(randomAngle);
+        y += randomRadius * Math.sin(randomAngle);
+        
+        // Ensure points stay within bounds
+        x = Math.max(minX + 50, Math.min(x, maxX - 50));
+        y = Math.max(minY + 50, Math.min(y, maxY - 50));
+        
+        coords.add(new Point2D.Double(x, y));
     }
-
-
-
-
-    // build gates for a star system. used when chunks are create and new chunks discovered
+    
+    return coords;
+}    // build gates for a star system. used when chunks are create and new chunks discovered
     private  void assignGates(int ssID, List<Integer>targetIDs){
 
         List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
@@ -824,7 +861,7 @@ public class GalaxyMap {
     //debug mode
 
     private int debugChunksSpawned = 0;
-    private int debugSpawnAmount = 260; // Total chunks to spawn
+    private int debugSpawnAmount = 50; //260; // Total chunks to spawn
     private int spawnEachTickAmount = 2; // How many to spawn per tick
     private int x = 0, y = 0;
     private int dx = 1, dy = 0;
