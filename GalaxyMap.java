@@ -610,77 +610,94 @@ public class GalaxyMap {
 
     //draw
     private void draw() {
-        // Clear background
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, WIDTH, HEIGHT);
-
-
-        // Update screen positions for all systems that will be drawn
-        systemData.values().forEach(sys -> {
-            sys.updateScreenPosition(viewX, viewY, scale);
-        });
-
-        // Draw connections
-        gc.setLineWidth(1.0 * scale);
-        for (SystemData systemA : systemData.values()) {
-            // Skip if system is not in view
-            if (!systemA.isInView) continue;
-            // In normal mode, skip if not within one hop
-            if (!debugMode && !isOneHopFromVisited(systemA)) continue;
-
-            for (int connectedId : systemA.connections) {
-                SystemData systemB = systemData.get(connectedId);
-                if (systemB == null || !systemB.isInView) continue;
-
-                // Only draw connection if it meets our criteria
-                if (!shouldDrawConnection(systemA, systemB)) continue;
-
-                // Set connection color based on visited status of both systems
-                if (systemA.visited && systemB.visited) {
-                    gc.setStroke(Color.WHITE);  // Both systems visited = white connection
-                } else {
-                    gc.setStroke(Color.GRAY);   // At least one system unvisited = gray connection
-                }
-
-                gc.strokeLine(systemA.screenX, systemA.screenY,
-                        systemB.screenX, systemB.screenY);
-            }
-        }
-
-        // Draw systems
-        double dotSize = 6.0 * scale;
-        for (SystemData system : systemData.values()) {
-            // Skip if system is not in view
-            if (!system.isInView) continue;
-            // In normal mode, skip if not within one hop
-            if (!debugMode && !isOneHopFromVisited(system)) continue;
-
-            // Set system color
-            if (system.id == currentSystem) {
-                gc.setFill(Color.PURPLE);
-            } else if (system.visited) {
-                gc.setFill(Color.WHITE);
-            } else {
-                gc.setFill(Color.GRAY);
-            }
-
-            gc.fillOval(
-                    system.screenX - dotSize/2,
-                    system.screenY - dotSize/2,
-                    dotSize,
-                    dotSize
-            );
-
-            // Draw system ID
-            gc.setFill(Color.CYAN);
-            gc.setFont(javafx.scene.text.Font.font(8.0 * scale));
-            gc.fillText(
-                    String.valueOf(system.id),
-                    system.screenX + dotSize,
-                    system.screenY - dotSize
-            );
+    // Draw grid background
+    gc.setFill(Color.rgb(0, 0, 20));
+    gc.fillRect(0, 0, WIDTH, HEIGHT);
+    drawGrid();
+    
+    systemData.values().forEach(sys -> sys.updateScreenPosition(viewX, viewY, scale));
+    
+    // Draw connections with glow
+    gc.setLineWidth(2.0 * scale);
+    for (SystemData systemA : systemData.values()) {
+        if (!systemA.isInView || (!debugMode && !isOneHopFromVisited(systemA))) continue;
+        
+        for (int connectedId : systemA.connections) {
+            SystemData systemB = systemData.get(connectedId);
+            if (systemB == null || !systemB.isInView || !shouldDrawConnection(systemA, systemB)) continue;
+            
+            // Glow effect
+            gc.setStroke(Color.rgb(0, 255, 255, 0.3));
+            gc.setLineWidth(4.0 * scale);
+            gc.strokeLine(systemA.screenX, systemA.screenY, systemB.screenX, systemB.screenY);
+            
+            // Main line
+            gc.setStroke(systemA.visited && systemB.visited ? 
+                Color.rgb(255, 51, 153) : // Hot pink
+                Color.rgb(128, 0, 255));   // Purple
+            gc.setLineWidth(2.0 * scale);
+            gc.strokeLine(systemA.screenX, systemA.screenY, systemB.screenX, systemB.screenY);
         }
     }
+    
+    // Draw systems
+    double dotSize = 8.0 * scale;
+    for (SystemData system : systemData.values()) {
+        if (!system.isInView || (!debugMode && !isOneHopFromVisited(system))) continue;
+        
+        // Glow effect
+        gc.setFill(Color.rgb(0, 255, 255, 0.3));
+        gc.fillOval(
+            system.screenX - (dotSize * 1.5)/2,
+            system.screenY - (dotSize * 1.5)/2,
+            dotSize * 1.5,
+            dotSize * 1.5
+        );
+        
+        // Main dot
+        Color systemColor = system.id == currentSystem ? 
+            Color.rgb(255, 51, 153) : // Current system: Hot pink
+            system.visited ? 
+                Color.rgb(0, 255, 255) : // Visited: Cyan
+                Color.rgb(128, 0, 255);   // Unvisited: Purple
+        
+        gc.setFill(systemColor);
+        gc.fillOval(
+            system.screenX - dotSize/2,
+            system.screenY - dotSize/2,
+            dotSize,
+            dotSize
+        );
+        
+        // System ID with glow
+        gc.setFill(Color.rgb(0, 255, 255, 0.5));
+        gc.setFont(javafx.scene.text.Font.font("Arial", 10.0 * scale));
+        gc.fillText(
+            String.valueOf(system.id),
+            system.screenX + dotSize,
+            system.screenY - dotSize
+        );
+        gc.setFill(Color.WHITE);
+        gc.fillText(
+            String.valueOf(system.id),
+            system.screenX + dotSize,
+            system.screenY - dotSize
+        );
+    }
+}
+
+private void drawGrid() {
+    gc.setStroke(Color.rgb(128, 128, 255, 0.2));
+    gc.setLineWidth(1);
+    double gridSize = 50 * scale;
+    
+    for (double x = 0; x < WIDTH; x += gridSize) {
+        gc.strokeLine(x, 0, x, HEIGHT);
+    }
+    for (double y = 0; y < HEIGHT; y += gridSize) {
+        gc.strokeLine(0, y, WIDTH, y);
+    }
+}
 
     private boolean shouldDrawConnection(SystemData systemA, SystemData systemB) {
         // Always draw connections between visited systems
