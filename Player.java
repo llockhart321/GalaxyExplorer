@@ -104,6 +104,9 @@ public class Player {
 
       // gate stops player, maybe we can add a slight movement in out direction
       PlayerMovementState.getInstance().stop();
+
+
+
    }
 
 

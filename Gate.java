@@ -231,7 +231,7 @@ public class Gate {
 
         if (destinationGate != null) {
             // Calculate spawn position in front of the destination gate
-            double spawnOffsetDistance = 70; // Distance to spawn from the gate
+            double spawnOffsetDistance = 100; // Distance to spawn from the gate
 
             // Calculate spawn position based on gate's rotation
             double spawnX = destinationGate.x;
