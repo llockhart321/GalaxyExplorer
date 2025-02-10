@@ -3,56 +3,66 @@ import javafx.scene.paint.Color;
 import java.util.Random;
 
 public class StarSystemNebula {
-    private double[][] noiseLayer1;
-    private double[][] noiseLayer2;
-    private Color[] retroColors;
-    private int width;
-    private int height;
-    private double offsetX = 0;
-    private double offsetY = 0;
-    private final int GRID_SIZE = 32;
-    private final double SCALE = 180.0;
+   private double[][] noiseLayer1;
+   private double[][] noiseLayer2;
+   private Color[] retroColors;
+   private int width;
+   private int height;
+   private double offsetX = 0;
+   private double offsetY = 0;
+   private final int GRID_SIZE = 32;
+   private final double SCALE = 180.0;
     
-    public StarSystemNebula(int width, int height, long seed) {
-        this.width = width * 5;
-        this.height = height * 5;
-        retroColors = new Color[]{
+   public StarSystemNebula(int width, int height, long seed) {
+      this.width = width * 5;
+      this.height = height * 5;
+        
+        // Center the nebula on player spawn (380, 220)
+      this.offsetX = 380;
+      this.offsetY = 220;
+        
+      retroColors = new Color[]{
             Color.rgb(255, 51, 153, 0.4),
             Color.rgb(0, 255, 255, 0.3)
-        };
-        noiseLayer1 = generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed);
-        noiseLayer2 = generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed + 1);
-    }
+         };
+      noiseLayer1 = generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed);
+      noiseLayer2 = generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed + 1);
+   }
 
    
    public void setOffset(double x, double y) {
+    // Simply store the raw offset values
       this.offsetX = x;
       this.offsetY = y;
    }
+
+   private double wrapValue(double value, double max) {
+      return value - max * Math.floor(value / max);
+   }
    
-    public void draw(GraphicsContext gc) {
+   public void draw(GraphicsContext gc) {
         // Draw simplified grid
-        if (offsetX % 40 == 0 && offsetY % 40 == 0) {
-            drawGrid(gc);
-        }
+      if (offsetX % 40 == 0 && offsetY % 40 == 0) {
+         drawGrid(gc);
+      }
         
         // Draw nebula with larger steps
-        drawNoiseLayer(gc, noiseLayer1, 0.7, 1.0, retroColors[0]);
-        drawNoiseLayer(gc, noiseLayer2, 1.0, 0.6, retroColors[1]);
-    }
+      drawNoiseLayer(gc, noiseLayer1, 0.7, 1.0, retroColors[0]);
+      drawNoiseLayer(gc, noiseLayer2, 1.0, 0.6, retroColors[1]);
+   }
     
-    private void drawGrid(GraphicsContext gc) {
-        gc.setStroke(Color.rgb(255, 255, 255, 0.15));
-        gc.setLineWidth(1);
-        double step = 80; // Increased grid size
+   private void drawGrid(GraphicsContext gc) {
+      gc.setStroke(Color.rgb(255, 255, 255, 0.15));
+      gc.setLineWidth(1);
+      double step = 80; // Increased grid size
         
-        for (double x = 0; x < gc.getCanvas().getWidth(); x += step) {
-            gc.strokeLine(x, 0, x, gc.getCanvas().getHeight());
-        }
-        for (double y = 0; y < gc.getCanvas().getHeight(); y += step) {
-            gc.strokeLine(0, y, gc.getCanvas().getWidth(), y);
-        }
-    }
+      for (double x = 0; x < gc.getCanvas().getWidth(); x += step) {
+         gc.strokeLine(x, 0, x, gc.getCanvas().getHeight());
+      }
+      for (double y = 0; y < gc.getCanvas().getHeight(); y += step) {
+         gc.strokeLine(0, y, gc.getCanvas().getWidth(), y);
+      }
+   }
    
    private void drawNoiseLayer(GraphicsContext gc, double[][] noise, double parallaxFactor, double alpha, Color baseColor) {
       int screenWidth = (int) gc.getCanvas().getWidth();
@@ -65,8 +75,8 @@ public class StarSystemNebula {
       for (int x = 0; x < screenWidth; x += 4) {  // Sample every 4 pixels for optimization
          for (int y = 0; y < screenHeight; y += 4) {
             // Map screen coordinates to noise grid
-            double noiseX = (x + effectiveOffsetX) / SCALE;
-            double noiseY = (y + effectiveOffsetY) / SCALE;
+            double noiseX = wrapValue(x + effectiveOffsetX, SCALE * GRID_SIZE) / SCALE;
+            double noiseY = wrapValue(y + effectiveOffsetY, SCALE * GRID_SIZE) / SCALE;
          
             // Sample noise using bilinear interpolation
             double noiseValue = sampleNoise(noise, noiseX, noiseY);
