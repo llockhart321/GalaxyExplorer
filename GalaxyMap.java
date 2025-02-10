@@ -396,10 +396,11 @@ public class GalaxyMap {
                 // if ssid doesnt already have gate to target
                 if(!exists) {
 
-                    int direction = 0;
+
                     int targetSystem = targetIDs.get(i);
-                    double x = random.nextDouble(50, 700);
-                    double y = random.nextDouble(20, 300);
+                    int direction = (int)calculateGateDirection(ssID, targetSystem);
+                    //double x = random.nextDouble(50, 700);
+                    //double y = random.nextDouble(20, 300);
                     StarSystem target = StarSystemCache.getInstance().get(ssID);
                     String generalArea = getSystemChunkPosition(ssID,getSystemChunk(ssID) );
                     System.out.println("gate "+ssID+" is near "+generalArea);
@@ -428,7 +429,7 @@ public class GalaxyMap {
         // Get relative position within the chunk
         double relX = system.position.x - chunkStartX;
         double relY = system.position.y - chunkStartY;
-        
+
 
         // Define thirds of the chunk
         double thirdSize = CHUNK_SIZE / 3.0;
@@ -461,6 +462,39 @@ public class GalaxyMap {
         String position = vertical + horizontal;
         System.out.println("Calculated position: " + position + " for system " + ssID + " in chunk " + chunkLoc);
         return position;
+    }
+
+
+    public double calculateGateDirection(int sourceId, int targetId) {
+        SystemData sourceSystem = systemData.get(sourceId);
+        SystemData targetSystem = systemData.get(targetId);
+
+        if (sourceSystem == null || targetSystem == null) {
+            return 0.0;
+        }
+
+        // Get the vector from source to target
+        double dx = targetSystem.position.x - sourceSystem.position.x;
+        double dy = targetSystem.position.y - sourceSystem.position.y;
+
+        // Calculate angle in radians, convert to degrees
+        // Math.atan2 returns angle in range -π to π
+        double angle = Math.toDegrees(Math.atan2(dy, dx));
+
+        // Add 90 degrees because gates are drawn pointing up by default
+        // Then add 180 because we want the back of the gate to face the target
+        angle += 270;
+
+        // Normalize to 0-360 range
+        angle = angle % 360;
+        if (angle < 0) {
+            angle += 360;
+        }
+
+        System.out.println("Gate from system " + sourceId + " to " + targetId +
+                " rotated " + angle + " degrees");
+
+        return angle;
     }
 
 

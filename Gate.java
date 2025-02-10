@@ -5,7 +5,12 @@ import javafx.scene.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
+
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.util.List;
+
+import javafx.scene.transform.Rotate;
 import javafx.stage.*;
 import java.util.Random;
 
@@ -43,24 +48,38 @@ public class Gate {
         // Update rectangle bounds to match current position
       if (activateBounds == null) {
           activateBounds = new Rectangle(x, y+30, sizeX, sizeY);
+          activateBounds = rotateRectangle(activateBounds, direction);
       } else {
           activateBounds.setX(x);
           activateBounds.setY(y+30);
           activateBounds.setWidth(sizeX);
           activateBounds.setHeight(sizeY);
+          activateBounds = rotateRectangle(activateBounds, direction);
       }
        if (bottomBounds == null) {
            bottomBounds = new Rectangle(x, y+40, sizeX, sizeY-10);
+           bottomBounds = rotateRectangle(bottomBounds, direction);
        } else {
            bottomBounds.setX(x);
            bottomBounds.setY(y+40);
            bottomBounds.setWidth(sizeX);
            bottomBounds.setHeight(sizeY);
+           bottomBounds = rotateRectangle(bottomBounds, direction);
        }
 
    }
 
+    public static Rectangle rotateRectangle(Rectangle rect, double angle) {
+        // Calculate the center of the rectangle
+        double centerX = rect.getX() + rect.getWidth() / 2;
+        double centerY = rect.getY() + rect.getHeight() / 2;
 
+        // Rotate the rectangle by the given angle around its center
+        Rotate rotate = new Rotate(angle, centerX, centerY);
+        rect.getTransforms().add(rotate);
+
+        return rect;
+    }
 
 
    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
@@ -113,7 +132,17 @@ public class Gate {
 
       // Debug rectangle (already using screen coordinates)
       gc.setStroke(Color.RED);
-      gc.strokeRect(screenX, screenY+30, sizeX, sizeY);
+       gc.setLineWidth(20);
+
+       // Calculate the center of the rectangle
+       double activateBoundsCenterX = activateBounds.getX() + activateBounds.getWidth() / 2;
+       double activateBoundsCenterY = activateBounds.getY() + activateBounds.getHeight() / 2;
+
+       // Rotate the rectangle
+       Rotate rotate = new Rotate(direction, activateBoundsCenterX, activateBoundsCenterY);
+       //activateBounds.getTransforms().add(rotate);
+       gc.strokeRect(activateBounds.getX(), activateBounds.getY(), activateBounds.getWidth(), 2000);
+       //activateBounds.getHeight()
 
       // Label (already using screen coordinates)
       gc.setFill(Color.CYAN);
