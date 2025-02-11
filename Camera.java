@@ -74,10 +74,10 @@ public class Camera {
       //mapCenterOffsetY = clamp(mapCenterOffsetY, 0, WORLD_HEIGHT - 450);
 
 
-      gc.setStroke(Color.RED);
-      int width = RIGHT_BOUND - LEFT_BOUND;
-      int height = DOWN_BOUND - UP_BOUND;
-      gc.strokeRect(LEFT_BOUND, UP_BOUND, width, height);
+      //gc.setStroke(Color.RED);
+      //int width = RIGHT_BOUND - LEFT_BOUND;
+      //int height = DOWN_BOUND - UP_BOUND;
+      //gc.strokeRect(LEFT_BOUND, UP_BOUND, width, height);
    }
 
    private double clamp(double value, double min, double max) {

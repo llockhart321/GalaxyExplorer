@@ -131,8 +131,8 @@ public class Gate {
       gc.restore();
 
       // Debug rectangle (already using screen coordinates)
-      gc.setStroke(Color.RED);
-       gc.setLineWidth(20);
+      //gc.setStroke(Color.RED);
+      // gc.setLineWidth(20);
 
        // Calculate the center of the rectangle
        double activateBoundsCenterX = activateBounds.getX() + activateBounds.getWidth() / 2;
