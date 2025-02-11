@@ -60,9 +60,9 @@ public class StarSystem {
       nebula = new StarSystemNebula(800, 450, ID); //for the parallax clouds
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
-         int minRadius = 40;
-         int maxRadius = 100;
-         int minDistance = 500;
+         int minRadius = 100;
+         int maxRadius = 250;
+         int minDistance = 800;
          int maxDistance = 2300; //setting mins and maxes for random parameters for planets 
          
        
@@ -82,8 +82,8 @@ public class StarSystem {
       
       int asteroidDistance = rand.nextInt(maxAstDist - minAstDist + 1) + minAstDist; // Fixed distance for all asteroids
       for (int i = 0; i < numAsteroids; i++) {
-         int minRadius = 3;
-         int maxRadius = 8;
+         int minRadius = 8;
+         int maxRadius = 15;
          int radius = rand.nextInt(maxRadius - minRadius + 1) + minRadius;
          int speed = rand.nextInt(50) + 50; // Random speed between 50 and 100
          double position = rand.nextDouble() * 2 * Math.PI; // Random initial position
