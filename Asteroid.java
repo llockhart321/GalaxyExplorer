@@ -89,24 +89,67 @@ public class Asteroid {
                 (part1.getRadius() + part2.getRadius()) * 0.8; // 0.8 for overlap threshold
     }
     private void updatePosition() {
-        if (isIntact) {
-            // Update orbital position for intact asteroids
-            orbitalPosition += Math.toRadians(orbitalSpeed / centerDistance);
-            if (orbitalPosition > 2 * Math.PI) {
-                orbitalPosition -= 2 * Math.PI;
+    if (isIntact) {
+        // Update orbital position for intact asteroids
+        orbitalPosition += Math.toRadians(orbitalSpeed / centerDistance);
+        if (orbitalPosition > 2 * Math.PI) {
+            orbitalPosition -= 2 * Math.PI;
+        }
+    } else {
+        // Update individual part positions with collision checking
+        Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
+        for (AsteroidPart part : parts) {
+            Point2D pos = part.getPosition();
+            Point2D vel = part.getVelocity();
+            Point2D newPos = pos.add(vel);
+            
+            // Get the world position of the part
+            Point2D worldPos = asteroidCenter.add(newPos);
+            
+            // Check collision with sun
+            Point2D sunCenter = new Point2D(Sun.WORLD_CENTER_X, Sun.WORLD_CENTER_Y);
+            double distToSun = worldPos.distance(sunCenter);
+            if (distToSun < (300 + part.getRadius())) { // Sun radius (300) + part radius
+                // Calculate bounce direction from sun
+                Point2D bounceDir = worldPos.subtract(sunCenter).normalize();
+                // Reflect velocity off sun surface
+                vel = reflect(vel, bounceDir);
+                part.setVelocity(vel.multiply(0.8)); // Reduce velocity after bounce
+                // Move part to just outside sun
+                double correctDist = 300 + part.getRadius();
+                Point2D correctedPos = sunCenter.add(bounceDir.multiply(correctDist));
+                newPos = correctedPos.subtract(asteroidCenter);
             }
-        } else {
-            // Update individual part positions based on velocity without orbital force
-            for (AsteroidPart part : parts) {
-                Point2D pos = part.getPosition();
-                Point2D vel = part.getVelocity();
-                // Update position only
-                pos = pos.add(vel);
-                part.setPosition(pos);
-                part.setVelocity(vel);
+            
+            // Check collision with planets
+            StarSystem system = Player.getInstance().getSystem();
+            for (Planet planet : system.getPlanets()) {
+                Point2D planetCenter = new Point2D(planet.getRelativeX(500), planet.getRelativeY(500));
+                double distToPlanet = worldPos.distance(planetCenter);
+                if (distToPlanet < (planet.getRadius() + part.getRadius())) {
+                    // Calculate bounce direction from planet
+                    Point2D bounceDir = worldPos.subtract(planetCenter).normalize();
+                    // Reflect velocity off planet surface
+                    vel = reflect(vel, bounceDir);
+                    part.setVelocity(vel.multiply(0.8)); // Reduce velocity after bounce
+                    // Move part to just outside planet
+                    double correctDist = planet.getRadius() + part.getRadius();
+                    Point2D correctedPos = planetCenter.add(bounceDir.multiply(correctDist));
+                    newPos = correctedPos.subtract(asteroidCenter);
+                }
             }
+            
+            // Update position
+            part.setPosition(newPos);
         }
     }
+}
+
+// Helper method to reflect a velocity vector off a surface normal
+private Point2D reflect(Point2D velocity, Point2D normal) {
+    double dot = velocity.dotProduct(normal);
+    return velocity.subtract(normal.multiply(2 * dot));
+}
     public double getRelativeX() {
         return Sun.WORLD_CENTER_X + centerDistance * Math.cos(orbitalPosition);
     }
