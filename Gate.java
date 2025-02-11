@@ -324,7 +324,7 @@ public class Gate {
 
     if (destinationGate != null) {
         // Calculate spawn position in front of the destination gate
-        double spawnOffsetDistance = 75; // Increased distance to prevent immediate re-triggering
+        double spawnOffsetDistance = 95; // Increased distance to prevent immediate re-triggering
         double spawnX = destinationGate.x;
         double spawnY = destinationGate.y;
 
