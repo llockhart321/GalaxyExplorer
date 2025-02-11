@@ -243,6 +243,7 @@ public class StarSystem {
                //break;
            }
        }
+       sun.handleCollision(player);
    }
 
     public void collisionCheck(GraphicsContext gc) {

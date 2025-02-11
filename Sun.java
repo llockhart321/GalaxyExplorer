@@ -22,6 +22,49 @@ public class Sun {
         this.bounds = new Circle(WORLD_CENTER_X, WORLD_CENTER_Y, radius);
     }
     
+    public void handleCollision(Player player) {
+        // Get centers of both objects
+        Circle playerBounds = Player.getBounds();
+        double playerCenterX = player.getX() + playerBounds.getRadius();
+        double playerCenterY = player.getY() + playerBounds.getRadius();
+
+        // Calculate vector from planet to player
+        double dx = playerCenterX - bounds.getCenterX();
+        double dy = playerCenterY - bounds.getCenterY();
+
+        // Calculate current distance
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance == 0) {
+            // If centers are exactly the same, push player right
+            player.setX(player.getX() + playerBounds.getRadius() + bounds.getRadius());
+            return;
+        }
+
+        // Calculate minimum allowed distance
+        double minDistance = bounds.getRadius() + playerBounds.getRadius();
+
+        if (distance < minDistance) {
+            // Normalize the direction vector
+            double nx = dx / distance;
+            double ny = dy / distance;
+
+            // Calculate how far to push the player out
+            double pushDistance = minDistance - distance;
+
+            // Set player's new position to be exactly at the minimum distance
+            player.setX(player.getX() + (nx * pushDistance));
+            player.setY(player.getY() + (ny * pushDistance));
+
+            // Reset player movement state to prevent sticking
+            PlayerMovementState.getInstance().stopLeft();
+            PlayerMovementState.getInstance().stopRight();
+            PlayerMovementState.getInstance().stopUp();
+            PlayerMovementState.getInstance().stopDown();
+        }
+    }
+
+    
     public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
         double screenX = bounds.getCenterX() - radius - cameraOffsetX;
         double screenY = bounds.getCenterY() - radius - cameraOffsetY;

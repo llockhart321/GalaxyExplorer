@@ -136,7 +136,6 @@ public class Asteroid {
         return parts.isEmpty();
     }
     public void checkPlayerCollision(Player player) {
-        if (!isIntact) return; // Only check collisions for intact asteroids
         Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
         Point2D playerCenter = new Point2D(
                 player.getX() + Player.getBounds().getRadius(),
@@ -147,31 +146,24 @@ public class Asteroid {
         for (AsteroidPart part : parts) {
             Point2D partWorldPos = asteroidCenter.add(part.getPosition());
             double collisionDist = part.getRadius() + Player.getBounds().getRadius();
-            if (partWorldPos.distance(playerCenter) < collisionDist) { //if the player position overlaps asteroid 
-                // Calculate bounce direction
-                Point2D bounceDir = partWorldPos.subtract(playerCenter).normalize();
-                // Break apart the asteroid
-                /*isIntact = false;
-                // Apply forces to asteroid parts
-                for (AsteroidPart remainingPart : parts) {
-                    Point2D partPos = remainingPart.getPosition();
-                    double distance = partPos.distance(part.getPosition());
-                    double forceFactor = 1.0 / (1.0 + distance);
-                    // Calculate force direction relative to impact point
-                    Point2D forceDir = partPos.subtract(part.getPosition()).normalize();
-                    Point2D impulse = forceDir.multiply(IMPACT_FORCE * 0.5 * forceFactor); // Reduced force for gentler bounce
-                    remainingPart.setVelocity(remainingPart.getVelocity().add(impulse));
-                }
-                // Update asteroid part groups
-                updateGroups();
-                // Could add player bounce response here if desired
-                player.moveXBy(bounceDir.getX() * 5);
-                player.moveYBy(bounceDir.getY() * 5);*/
+            if (partWorldPos.distance(playerCenter) < collisionDist) {
+                // Calculate push direction
+                Point2D pushDir = partWorldPos.subtract(playerCenter).normalize();
+                
+                // Calculate overlap distance
+                double overlap = collisionDist - partWorldPos.distance(playerCenter);
+                
+                // Push player out of the asteroid part
+                player.setX(player.getX() - pushDir.getX() * overlap);
+                player.setY(player.getY() - pushDir.getY() * overlap);
+                
+                // Stop player movement
+                PlayerMovementState.getInstance().stop();
+                
                 break; // Exit after first collision
             }
         }
-    }
-    public void applyCollisionForce(Point2D force) {
+    }    public void applyCollisionForce(Point2D force) {
         isIntact = false;
         for (AsteroidPart part : parts) {
             Point2D currentVel = part.getVelocity();
