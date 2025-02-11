@@ -78,7 +78,7 @@ public class GalaxyMap {
 
 
 
-    private int CHUNK_SIZE = 100;
+    private static final double CHUNK_SIZE = 1000.0;
 
 
 
@@ -475,6 +475,8 @@ public class GalaxyMap {
 
         // Determine horizontal position
         String horizontal;
+        System.out.println("System " + ssID + " relative position: " + relX + ", " + relY);
+System.out.println("Thirds size: " + thirdSize);
         if (relX < thirdSize) {
             horizontal = "L";
         } else if (relX < 2 * thirdSize) {
