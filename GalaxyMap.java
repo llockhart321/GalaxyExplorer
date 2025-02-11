@@ -1426,7 +1426,7 @@ private void drawGrid() {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) { // true enables append mode
                     for (Point2D.Double point : coords) {
-                        writer.write((int)chunk.getX() + " " + (int)chunk.getY() + " " + ssc.getNextSystemId() + " " + point.x + " " + point.y);
+                        writer.write((int)chunk.getX() + " " + (int)chunk.getY() + " " + ssc.generateNextSystemId() + " " + point.x + " " + point.y);
                         writer.newLine();
                     }
                 } catch (IOException e) {
