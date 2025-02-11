@@ -237,6 +237,8 @@ public class StarSystem {
                //break;
            }
        }
+       
+       sun.handleCollision(player);
    }
 
     public void collisionCheck(GraphicsContext gc) {
@@ -294,11 +296,17 @@ public class StarSystem {
            }
        }
        // Check planet-asteroid collisions
-       for (Planet planet : planets) {
-           for (Asteroid asteroid : asteroids) {
-               //planet.checkAsteroidCollision(asteroid);
-           }
+       for(int i=0; i<asteroids.size(); i++)
+       {
+         
+         
        }
+       
+       
+       //sun.checkCollision()
+       
+       
+       
 
        checkPlayerAsteroidCollisions(Player.getInstance());
 
