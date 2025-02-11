@@ -3,9 +3,21 @@ import javafx.scene.paint.Color;
 import java.util.Random;
 
 public class StarSystemNebula {
-   private double[][] noiseLayer1;
-   private double[][] noiseLayer2;
-   private Color[] retroColors;
+   private static class NebulaLayer {
+      double[][] noise;
+      Color color;
+      double parallaxFactor;
+      double alpha;
+      
+      NebulaLayer(double[][] noise, Color color, double parallaxFactor, double alpha) {
+         this.noise = noise;
+         this.color = color;
+         this.parallaxFactor = parallaxFactor;
+         this.alpha = alpha;
+      }
+   }
+   
+   private NebulaLayer[] layers;
    private int width;
    private int height;
    private double offsetX = 0;
@@ -16,22 +28,38 @@ public class StarSystemNebula {
    public StarSystemNebula(int width, int height, long seed) {
       this.width = width * 5;
       this.height = height * 5;
-        
-        // Center the nebula on player spawn (380, 220)
+      
+      // Center the nebula on player spawn
       this.offsetX = 380;
       this.offsetY = 220;
-        
-      retroColors = new Color[]{
-            Color.rgb(255, 51, 153, 0.4),
-            Color.rgb(0, 255, 255, 0.3)
-         };
-      noiseLayer1 = generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed);
-      noiseLayer2 = generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed + 1);
+      
+      // Create multiple nebula layers with different colors and parallax factors
+      layers = new NebulaLayer[] {
+         // Background layer (moves slowest)
+         new NebulaLayer(
+            generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed),
+            Color.rgb(255, 51, 153, 0.6),  // Pink
+            0.1,  // Moves at 10% of player speed
+            0.8
+         ),
+         // Middle layer
+         new NebulaLayer(
+            generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed + 1),
+            Color.rgb(0, 255, 255, 0.5),   // Cyan
+            0.4,  // Moves at 40% of player speed
+            0.7
+         ),
+         // Foreground layer (moves fastest)
+         new NebulaLayer(
+            generatePerlinNoise(GRID_SIZE, GRID_SIZE, seed + 2),
+            Color.rgb(128, 0, 255, 0.4),   // Purple
+            1.2,  // Moves at 100% of player speed
+            0.6
+         )
+      };
    }
-
    
    public void setOffset(double x, double y) {
-    // Simply store the raw offset values
       this.offsetX = x;
       this.offsetY = y;
    }
@@ -39,14 +67,45 @@ public class StarSystemNebula {
    private double wrapValue(double value, double max) {
       return value - max * Math.floor(value / max);
    }
-   
+      
    public void draw(GraphicsContext gc) {
-    // Draw grid always, not conditionally
-      drawGrid(gc);
-    
-    // Draw nebula layers
-      drawNoiseLayer(gc, noiseLayer1, 0.7, 1.0, retroColors[0]);
-      drawNoiseLayer(gc, noiseLayer2, 1.0, 0.6, retroColors[1]);
+      // Draw layers from back to front
+      for (NebulaLayer layer : layers) {
+         drawNoiseLayer(gc, layer);
+      }
+   }
+   private void drawNoiseLayer(GraphicsContext gc, NebulaLayer layer) {
+      int screenWidth = (int) gc.getCanvas().getWidth();
+      int screenHeight = (int) gc.getCanvas().getHeight();
+   
+      // Calculate effective offsets based on parallax factor
+      double effectiveOffsetX = offsetX * layer.parallaxFactor;
+      double effectiveOffsetY = offsetY * layer.parallaxFactor;
+   
+      for (int x = 0; x < screenWidth; x += 4) {
+         for (int y = 0; y < screenHeight; y += 4) {
+            // Map screen coordinates to noise grid with parallax offset
+            double noiseX = wrapValue(x + effectiveOffsetX, SCALE * GRID_SIZE) / SCALE;
+            double noiseY = wrapValue(y + effectiveOffsetY, SCALE * GRID_SIZE) / SCALE;
+         
+            double noiseValue = sampleNoise(layer.noise, noiseX, noiseY);
+         
+            // Calculate fade-out from center
+            double centerX = screenWidth / 2.0;
+            double centerY = screenHeight / 2.0;
+            double distanceFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+            double fadeRadius = Math.max(width, height) * 0.5;
+            double fadeOut = Math.max(0, 1 - (distanceFromCenter / fadeRadius));
+         
+            // Apply color with adjusted opacity based on layer properties
+            if (noiseValue > 0.2) {
+               Color color = layer.color.deriveColor(0, 1, 1,
+                  noiseValue * fadeOut * layer.alpha * 0.4);
+               gc.setFill(color);
+               gc.fillRect(x, y, 4, 4);
+            }
+         }
+      }
    }
 
    private void drawGrid(GraphicsContext gc) {

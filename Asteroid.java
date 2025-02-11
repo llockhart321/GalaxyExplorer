@@ -30,15 +30,6 @@ public class Asteroid {
             parts.add(new AsteroidPart(partPos, partRadius, 0));
         }
     }
-    
-    public void handleCollision(Player player)
-    {
-      for(int i=0; i<parts.size(); i++)
-      {
-         parts.get(i).handleCollision(player);
-      }
-    }
-    
     public boolean checkMissileCollision(Point2D missilePos, double missileRadius) {
         Point2D asteroidCenter = new Point2D(getRelativeX(), getRelativeY());
         for (Iterator<AsteroidPart> iterator = parts.iterator(); iterator.hasNext(); ) {

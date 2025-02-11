@@ -130,19 +130,6 @@ public class Gate {
 
       gc.restore();
 
-      // Debug rectangle (already using screen coordinates)
-      gc.setStroke(Color.RED);
-       gc.setLineWidth(20);
-
-       // Calculate the center of the rectangle
-       double activateBoundsCenterX = activateBounds.getX() + activateBounds.getWidth() / 2;
-       double activateBoundsCenterY = activateBounds.getY() + activateBounds.getHeight() / 2;
-
-       // Rotate the rectangle
-       Rotate rotate = new Rotate(direction, activateBoundsCenterX, activateBoundsCenterY);
-       //activateBounds.getTransforms().add(rotate);
-       gc.strokeRect(activateBounds.getX(), activateBounds.getY(), activateBounds.getWidth(), 2000);
-       //activateBounds.getHeight()
 
       // Label (already using screen coordinates)
       gc.setFill(Color.CYAN);
@@ -231,7 +218,7 @@ public class Gate {
 
         if (destinationGate != null) {
             // Calculate spawn position in front of the destination gate
-            double spawnOffsetDistance = 70; // Distance to spawn from the gate
+            double spawnOffsetDistance = 100; // Distance to spawn from the gate
 
             // Calculate spawn position based on gate's rotation
             double spawnX = destinationGate.x;
@@ -337,7 +324,7 @@ public class Gate {
 
     if (destinationGate != null) {
         // Calculate spawn position in front of the destination gate
-        double spawnOffsetDistance = 100; // Increased distance to prevent immediate re-triggering
+        double spawnOffsetDistance = 60; // Increased distance to prevent immediate re-triggering
         double spawnX = destinationGate.x;
         double spawnY = destinationGate.y;
 
@@ -349,8 +336,12 @@ public class Gate {
         spawnY += spawnOffsetDistance * Math.sin(angleInRadians);
 
         // Set initial player position
-        player.setX(spawnX);
-        player.setY(spawnY);
+        double radians = Math.toRadians(direction);
+        double dx = Math.cos(radians) * 5;
+        double dy = Math.sin(radians) * 5;
+        
+        player.setX(spawnX+=dx);
+        player.setY(spawnY+=dy);
 
         // Check if spawn position is safe
         boolean isColliding = false;
@@ -363,7 +354,7 @@ public class Gate {
 
         // If collision detected, try alternative positions with increasing distances
         if (isColliding) {
-            System.out.println("Initial spawn position unsafe, trying alternatives");
+            //System.out.println("Initial spawn position unsafe, trying alternatives");
             double[] distances = {150, 200, 250}; // Try increasingly larger distances
             
             for (double distance : distances) {
@@ -382,20 +373,20 @@ public class Gate {
                 }
 
                 if (!isColliding) {
-                    System.out.println("Found safe position at distance: " + distance);
+                    //System.out.println("Found safe position at distance: " + distance);
                     break;
                 }
             }
 
             // If still no safe spot found, use a fallback position
             if (isColliding) {
-                System.out.println("No safe position found, using fallback");
+                //System.out.println("No safe position found, using fallback");
                 player.setX(800);
                 player.setY(800);
             }
         }
     } else {
-        System.out.println("No matching gate found in new system");
+        //System.out.println("No matching gate found in new system");
         player.setX(800);
         player.setY(800);
     }

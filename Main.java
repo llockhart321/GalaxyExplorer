@@ -5,9 +5,13 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.stage.*;
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 
 public class Main extends Application {
    private static boolean isMapOpen = false;
+   private String filename = "galaxy_data/systems.txt";
    public void start(Stage primaryStage) {
       // Create a FlowPane
       FlowPane root = new FlowPane();
@@ -34,9 +38,15 @@ public class Main extends Application {
       
       //set player start system
 
+
+      try (FileWriter writer = new FileWriter(filename, false)) {
+         // Opening the file in write mode without appending will clear its contents
+      } catch (IOException e) {
+         System.out.println("An error occurred while clearing the file: " + e.getMessage());
+      }
       //StarSystem startSystem = new StarSystem(gc, -1);
       //StarSystemCache.getInstance().add(startSystem);
-      GalaxyMap.getInstance().createChunk(0,0);
+      GalaxyMap.getInstance().createChunk(0,0, false);
       GalaxyMap.getInstance().setCurrentSystem(0);
 
       

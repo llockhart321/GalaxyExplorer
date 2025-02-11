@@ -3,6 +3,7 @@ import javafx.animation.Timeline;
 import javafx.scene.canvas.GraphicsContext;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.io.*;
 import java.util.*;
 import javafx.scene.paint.*;
 import javafx.scene.canvas.GraphicsContext;
@@ -13,6 +14,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import java.util.Random;
 import javafx.scene.shape.StrokeLineCap;
@@ -62,8 +64,8 @@ public class GalaxyMap {
     private double viewX = 0;
     private double viewY = 0;
     private double scale = 1.0;
-    private double minScale = 0.5;
-    private double maxScale = 6.0;
+    private double minScale = 0.07; //0.5
+    private double maxScale = 2.0; //5
     private double lastMouseX;
     private double lastMouseY;
     private boolean isPanning = false;
@@ -78,7 +80,7 @@ public class GalaxyMap {
 
 
 
-    private static final double CHUNK_SIZE = 1000.0;
+    private static final double CHUNK_SIZE = 90.0;
 
 
 
@@ -102,6 +104,39 @@ public class GalaxyMap {
     //vars for innerclass drwawring
     private  Map<Integer, SystemData> systemData = new HashMap<>();
     private Queue<Integer> processingQueue = new LinkedList<>();
+    private String filename = "galaxy_data/systems.txt";
+
+    //debug mode
+
+    private int debugChunksSpawned = 0;
+    private int debugSpawnAmount = 80000; //260; // Total chunks to spawn  goal 2500 chunks. 10000 starsystems
+
+    private int spawnEachTickAmount = 200; // How many to spawn per tick
+    private int x = 0, y = 0;
+    private int dx = 1, dy = 0;
+    private int stepSize = 1;
+    private int stepsTaken = 0;
+    private int directionChanges = 0;
+    private boolean isSpawning = false;
+    private Timeline debugUpdater;
+    private long lastTickTime = System.nanoTime();
+    private final long MAX_TICK_TIME_NS = 4_000_000_000L; // 5000ms (5 seconds) in nanoseconds
+    private int densityFactor = 1;
+    //private static final double B = 0.2;  // Growth rate of spiral
+   // private static final double Z = 0.3;  // Initial radius (reduced for tighter center)
+   // private static final double ARM_WIDTH = CHUNK_SIZE * 0.6;  // Width of spiral arms
+   // private  final double B = 0.25; // Spiral 1 coefficient
+   // private  final double Z = 0.3;  // Spiral 1 initial radius. defualt rad 5
+
+    private  final double C = -1.0; // Spiral 2 initial radius df rad -5
+    private  final double V = 0.25; // Spiral 2 coefficient
+    private static final double B = 0.2;  // Keep original growth rate
+    private static final double Z = 0.015;  // Even smaller initial radius og 0.15
+    private static  double ARM_WIDTH = CHUNK_SIZE * 0.045;  // Slightly thicker than original
+    private boolean debugActivated = false;
+
+
+
 
 
 
@@ -125,7 +160,7 @@ public class GalaxyMap {
 
 
     //create the next chunk of star systems. is called by main to create inital starsystems
-    public  void createChunk(int chunkLocX, int chunkLocY){
+    public  void createChunk(int chunkLocX, int chunkLocY, boolean debug){
 
 
 
@@ -137,6 +172,7 @@ public class GalaxyMap {
         //chunks.putIfAbsent(chunk, new ArrayList<>());
 
         if(chunks.containsKey(chunk)){
+
             return;
         }
 
@@ -146,23 +182,80 @@ public class GalaxyMap {
 
 
         //bounds for how many, maybe should get more specific in future
-        int ssCount = random.nextInt(3,5);
+        //int ssCount = random.nextInt(3,5);
+        int ssCount = determineSSCount(chunk);
 
-        //get ss coordinates to draw in map to make spiral
-        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount, chunk);
+
+
+
+        // if debug do not create and all that. else develope ss and all that.
+        if(debug){
+            return;
+        }
 
         // add ss' to chunk
 
         for(int i=0; i<ssCount; i++) {
-            //first create system
-            int newSys = StarSystemCache.getInstance().createSystem(gc);
-            //then add system to chunks list
-            Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
-            starSystems.add(newSys);
-            //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
+
+            //if it exists in debug.
+
+            String foundLine = null;
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(" ");
+                    if (parts.length < 3) continue;  // Ensure valid format
+
+                    int chunkX = Integer.parseInt(parts[0]);
+                    int chunkY = Integer.parseInt(parts[1]);
+
+                    if (chunkX == chunkLocX && chunkY == chunkLocY) {
+                        foundLine = line;  // Store the full line and stop searching
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            int newSys=-1;
+            SystemData sysData;
+            // Process the found line if it exists
+            if (foundLine != null) {
+                String[] parts = foundLine.split(" "); // Split by spaces
+
+                //int chunkX = Integer.parseInt(parts[0]);
+                //int chunkY = Integer.parseInt(parts[1]);
+                int ssid = Integer.parseInt(parts[2]);
+                double x = Double.parseDouble(parts[3]);
+                double y = Double.parseDouble(parts[4]);
+
+                 newSys = StarSystemCache.getInstance().createSystem(gc, ssid);
+                //then add system to chunks list
+                Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
+                starSystems.add(newSys);
+                //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
 
 
-            SystemData sysData = new SystemData(newSys, coords.pop());
+                sysData = new SystemData(newSys, new Point2D.Double(x,y));
+
+            } else {
+                //NOT FOUND
+                //System.out.println("Chunk not found.");
+                newSys = StarSystemCache.getInstance().createSystem(gc);
+                //then add system to chunks list
+                Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
+                starSystems.add(newSys);
+                //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
+
+
+                //get ss coordinates to draw in map to make spiral
+                Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount, chunk);
+                sysData = new SystemData(newSys, coords.pop());
+            }
+
+
             systemData.put(newSys, sysData);
 
 
@@ -175,7 +268,7 @@ public class GalaxyMap {
         Set<Integer> allStarSystemsSet = chunks.getOrDefault(chunk, Collections.emptySet());
 
 
-        System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
+        //System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
 
         List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
         //assign gates
@@ -204,6 +297,10 @@ public class GalaxyMap {
         handleNeighbors();
 
     }
+
+
+
+
 
     private void handleNeighbors(){
 
@@ -234,14 +331,11 @@ public class GalaxyMap {
             assignGates(left.id, targetSys);
 
 
-            System.out.println("teststerte3");
             // now give gate to target going to left.id
             //origin = new ArrayList<>(List.of(allStarSystems.get(left.id)));
             origin = new ArrayList<>(List.of(left.id));
 
-            System.out.println("teststerte");
             assignGates(targetSys.get(0), origin);
-            System.out.println("teststerte2");
 
 
             //find right neighbor connection
@@ -309,7 +403,7 @@ public class GalaxyMap {
 
                 // Check if the chunk already exists
                 if (!chunks.containsKey(newChunk)) {
-                    createChunk(newX, newY);
+                    createChunk(newX, newY, false);
                 }
             }
         }
@@ -371,6 +465,8 @@ public class GalaxyMap {
         }
         return coords;
     }*/
+
+    /*
     private Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
     Deque<Point2D.Double> coords = new ArrayDeque<>();
     
@@ -414,48 +510,319 @@ public class GalaxyMap {
     }
     
     return coords;
-}    // build gates for a star system. used when chunks are create and new chunks discovered
-    private void assignGates(int ssID, List<Integer> targetIDs) {
-    List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
+<<<<<<< HEAD
+    }
+*/
 
-    // Create gate
-    for (int i = 0; i < targetIDs.size(); i++) {
-        // Make sure gate doesn't go to self
-        if (ssID != targetIDs.get(i)) {
-            // Make sure gate doesn't already exist
-            boolean exists = false;
-            for (Gate gate : systemGates) {
-                if (gate.getTargetSystem() == targetIDs.get(i)) {
-                    exists = true;
+
+    /*
+
+    public Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
+        Deque<Point2D.Double> coords = new ArrayDeque<>();
+        if (ssCount == 0) return coords;
+
+        // Base coordinates for this chunk
+        double chunkBaseX = chunk.x * CHUNK_SIZE;
+        double chunkBaseY = chunk.y * CHUNK_SIZE;
+
+        // If in center circle, distribute randomly but evenly
+        double distFromCenter = Math.sqrt(chunk.x * chunk.x + chunk.y * chunk.y);
+        if (distFromCenter <= 5) {
+            for (int i = 0; i < ssCount; i++) {
+                coords.add(new Point2D.Double(
+                        chunkBaseX + random.nextDouble() * CHUNK_SIZE,
+                        chunkBaseY + random.nextDouble() * CHUNK_SIZE
+                ));
+            }
+            return coords;
+        }
+
+        // For spiral arms, try to place points along the spiral path
+        for (int i = 0; i < ssCount; i++) {
+            // Keep trying until we find a valid point
+            int attempts = 0;
+            while (attempts < 100) {
+                double x = chunkBaseX + random.nextDouble() * CHUNK_SIZE;
+                double y = chunkBaseY + random.nextDouble() * CHUNK_SIZE;
+
+                double theta = Math.atan2(y, x);
+                if (theta < 0) theta += 2 * Math.PI;
+
+                if (isInSpiral(x, y, theta)) {
+                    coords.add(new Point2D.Double(x, y));
                     break;
                 }
+                attempts++;
             }
-            
-            // If ssid doesn't already have gate to target
-            if (!exists) {
-                int targetSystem = targetIDs.get(i);
-                int direction = (int)calculateGateDirection(ssID, targetSystem);
-                
-                StarSystem target = StarSystemCache.getInstance().get(ssID);
-                // Get the relative position based on the source and target systems
-                String generalArea = getSystemChunkPosition(ssID, targetSystem);
-                System.out.println("gate " + ssID + " to " + targetSystem + " is near " + generalArea);
-                
-                javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
-                target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
-                systemData.get(ssID).addConnection(targetSystem);
+        }
+
+        return coords;
+    }
+
+     */
+    /*
+    public Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
+        Deque<Point2D.Double> coords = new ArrayDeque<>();
+        if (ssCount == 0) return coords;
+
+        double chunkBaseX = chunk.x * CHUNK_SIZE;
+        double chunkBaseY = chunk.y * CHUNK_SIZE;
+        double distFromCenter = Math.sqrt(chunk.x * chunk.x + chunk.y * chunk.y);
+
+        // For center region chunks
+        if (distFromCenter <= 5) {
+            for (int i = 0; i < ssCount; i++) {
+                coords.add(new Point2D.Double(
+                        chunkBaseX + random.nextDouble() * CHUNK_SIZE,
+                        chunkBaseY + random.nextDouble() * CHUNK_SIZE
+                ));
+            }
+            return coords;
+        }
+
+        // For spiral arm chunks
+        int attempts = 0;
+        while (coords.size() < ssCount && attempts < ssCount * 10) {
+            double x = chunkBaseX + random.nextDouble() * CHUNK_SIZE;
+            double y = chunkBaseY + random.nextDouble() * CHUNK_SIZE;
+
+            // Scale coordinates down for spiral check
+            double scaledX = x / CHUNK_SIZE;
+            double scaledY = y / CHUNK_SIZE;
+
+            if (isInSpiral(scaledX, scaledY)) {
+                coords.add(new Point2D.Double(x, y));
+            }
+            attempts++;
+        }
+
+        return coords;
+    }
+
+
+
+    private boolean isInSpiral(double x, double y) {
+        // Convert to polar coordinates
+        double r = Math.sqrt(x * x + y * y);
+        double theta = Math.atan2(y, x);
+        if (theta < 0) theta += 2 * Math.PI;
+
+        // Check both spiral arms
+        double r1 = Z * Math.exp(B * theta);
+        double r2 = Z * Math.exp(B * (theta + Math.PI));
+
+        // Distance from spiral arms (adjustable width)
+        double armWidth = CHUNK_SIZE * 0.4;
+        return Math.abs(r - Math.abs(r1)) < armWidth ||
+                Math.abs(r - Math.abs(r2)) < armWidth;
+    }
+
+
+     //Determines how many star systems should be in a chunk based on spiral coverage
+
+    public int determineSSCount(Point chunkCoord) {
+
+        // For center region
+        double distFromCenter = Math.sqrt(chunkCoord.x * chunkCoord.x + chunkCoord.y * chunkCoord.y);
+        if (distFromCenter <= 5) {
+            return (int)(densityFactor * 1.5); // 50% more dense in center
+        }
+
+        // Sample points to determine spiral arm coverage
+        int coverage = 0;
+        int samplePoints = 100;
+
+        for (int i = 0; i < samplePoints; i++) {
+            // Generate sample point within chunk
+            double x = chunkCoord.x + (random.nextDouble() - 0.5);
+            double y = chunkCoord.y + (random.nextDouble() - 0.5);
+
+            if (isInSpiral(x, y)) {
+                coverage++;
+            }
+        }
+
+        // Calculate star system count based on coverage and density factor
+        double coverageRatio = coverage / (double)samplePoints;
+        if (coverageRatio < 0.1) return 0;
+        return (int)(coverageRatio * densityFactor);
+    }
+
+     */
+
+
+    ///////AAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+
+
+    public Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
+        Deque<Point2D.Double> coords = new ArrayDeque<>();
+        if (ssCount == 0) return coords;
+
+        double chunkBaseX = chunk.x * CHUNK_SIZE;
+        double chunkBaseY = chunk.y * CHUNK_SIZE;
+        double distFromCenter = Math.sqrt(chunk.x * chunk.x + chunk.y * chunk.y);
+
+        // For center region chunks
+        if (distFromCenter <= 5) {
+            for (int i = 0; i < ssCount; i++) {
+                coords.add(new Point2D.Double(
+                        chunkBaseX + (random.nextDouble() - 0.5) * CHUNK_SIZE,
+                        chunkBaseY + (random.nextDouble() - 0.5) * CHUNK_SIZE
+                ));
+            }
+            return coords;
+        }
+
+        // For spiral arm chunks
+        int attempts = 0;
+        while (coords.size() < ssCount && attempts < ssCount * 10) {
+            double x = chunkBaseX + random.nextDouble() * CHUNK_SIZE;
+            double y = chunkBaseY + random.nextDouble() * CHUNK_SIZE;
+
+            if (isInSpiral(x / CHUNK_SIZE, y / CHUNK_SIZE)) {
+                coords.add(new Point2D.Double(x, y));
+            }
+            attempts++;
+        }
+
+        return coords;
+    }
+
+
+    private boolean isInSpiral(double x, double y) {
+        // Convert to polar coordinates
+        double r = Math.sqrt(x * x + y * y);
+        double theta = Math.atan2(y, x);
+
+        // Normalize theta to positive values
+        if (theta < 0) {
+            theta += 2 * Math.PI;
+        }
+
+        // Calculate which revolution the point might be in
+        double revolutions = Math.log(r / Z) / (B * 2 * Math.PI);
+        int baseRevolution = (int) Math.floor(revolutions);
+
+        // Check the nearest 3 possible revolutions for both arms
+        for (int i = baseRevolution - 1; i <= baseRevolution + 1; i++) {
+            // First arm
+            double expectedTheta1 = theta + (2 * Math.PI * i);
+            double expectedR1 = Z * Math.exp(B * expectedTheta1);
+
+            // Second arm (offset by PI radians)
+            double expectedTheta2 = expectedTheta1 + Math.PI;
+            double expectedR2 = Z * Math.exp(B * expectedTheta2);
+
+
+            //make arm width thicker in center thinner further from center
+            //up 0.01 for every 300
+            double centerX = 400;
+            double centerY = 225;
+            double distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+            int distanceThreshold = 300;
+            int armWidthDecrements = (int) (distance / distanceThreshold);
+
+            //ARM_WIDTH -= armWidthDecrements * 0.01;
+            if(distance > 300){
+                //ARM_WIDTH = 0.02;
+                ARM_WIDTH -= armWidthDecrements * 0.0000001;
+            }
+
+
+
+            // If the point is within ARM_WIDTH of either spiral arm, it's valid
+            if (Math.abs(r - expectedR1) < ARM_WIDTH ||
+                    Math.abs(r - expectedR2) < ARM_WIDTH) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public int determineSSCount(Point chunkCoord) {
+        double distFromCenter = Math.sqrt(chunkCoord.x * chunkCoord.x + chunkCoord.y * chunkCoord.y);
+        if (distFromCenter <= 2) {  // Reduced from 5 to 2 for much smaller center
+            return (int)(densityFactor * 1.5);
+        }
+
+        int coverage = 0;
+        int samplePoints = 100;
+        for (int i = 0; i < samplePoints; i++) {
+            double x = chunkCoord.x + (random.nextDouble() - 0.8);
+            double y = chunkCoord.y + (random.nextDouble() - 0.8);
+
+            if (isInSpiral(x, y)) {
+                coverage++;
+            }
+        }
+
+        double coverageRatio = coverage / (double) samplePoints;
+        if (coverageRatio < 0.05) return 0;
+
+        return Math.max(1, (int)(coverageRatio * densityFactor));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// build gates for a star system. used when chunks are create and new chunks discovered
+
+    private void assignGates(int ssID, List<Integer> targetIDs) {
+        List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
+
+        // Create gate
+        for (int i = 0; i < targetIDs.size(); i++) {
+            // Make sure gate doesn't go to self
+            if (ssID != targetIDs.get(i)) {
+                // Make sure gate doesn't already exist
+                boolean exists = false;
+                for (Gate gate : systemGates) {
+                    if (gate.getTargetSystem() == targetIDs.get(i)) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                // If ssid doesn't already have gate to target
+                if (!exists) {
+                    int targetSystem = targetIDs.get(i);
+                    int direction = (int)calculateGateDirection(ssID, targetSystem);
+
+                    StarSystem target = StarSystemCache.getInstance().get(ssID);
+                    // Get the relative position based on the source and target systems
+                    String generalArea = getSystemChunkPosition(ssID, targetSystem);
+                    System.out.println("gate " + ssID + " to " + targetSystem + " is near " + generalArea);
+
+                    javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
+                    target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
+                    systemData.get(ssID).addConnection(targetSystem);
+                }
             }
         }
     }
-}
 
-    
     /*public String getSystemChunkPosition(int sourceId, int targetId) {
     SystemData sourceSystem = systemData.get(sourceId);
     SystemData targetSystem = systemData.get(targetId);
     
     if (sourceSystem == null || targetSystem == null) {
         return "MR"; // Default to middle right if we can't determine
+>>>>>>> 795f42d97726c97376ecd08879dc84a97d4f54a0
     }
 
     // Calculate relative position of target system compared to source
@@ -606,7 +973,7 @@ public class GalaxyMap {
         }
         currentChunk = getSystemChunk(currentSystem);
 
-        testPrint();
+        //testPrint();
 
     }
     
@@ -639,20 +1006,12 @@ public class GalaxyMap {
         debugMode = false;
 
 
-        /*
-        isOpen = false;
-        debugDrawMode = false;  // Disable debug drawing mode
-        if (expansionTimeline != null) {
-            expansionTimeline.stop();
-        }
-        isDebugExpanding = false;
-
-         */
     }
 
 
 
 
+    private int dc = 0;
     //draw
     private void draw() {
     // Draw grid background
@@ -698,6 +1057,43 @@ public class GalaxyMap {
             dotSize * 1.5,
             dotSize * 1.5
         );
+
+
+        if(debugMode){
+            //Deque<Point2D.Double> coords = new ArrayDeque<>();
+            //Map<Integer, Point2D.Double> lastCoords = new HashMap<>();
+            gc.setFill(Color.WHITE);
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(" ");
+                    // int chunkX = Integer.parseInt(parts[0]);
+                    //int chunkY = Integer.parseInt(parts[1]);
+                    //int ssid = Integer.parseInt(parts[2]);
+                    double x = Double.parseDouble(parts[3]);
+                    double y = Double.parseDouble(parts[4]);
+
+                    // Update the last coordinates of the star system
+                    // lastCoords.put(ssid, new Point2D.Double(x, y));
+
+                    gc.fillOval(
+                            (x - viewX) * scale + (WIDTH / 2.0) - dotSize / 2,
+                            (y - viewY) * scale + (HEIGHT / 2.0) - dotSize / 2,
+                            dotSize,
+                            dotSize
+                    );
+                    dc++;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            //gc.setFill(Color.rgb(128, 0, 255));
+            //gc.setFill(Color.WHITE);
+
+        }
         
         // Main dot
         Color systemColor = system.id == currentSystem ? 
@@ -728,6 +1124,19 @@ public class GalaxyMap {
             system.screenX + dotSize,
             system.screenY - dotSize
         );
+
+
+
+
+    }
+
+    if(!debugActivated){
+        gc.setFont(new Font("Arial", 10));
+
+        // Set color to neon bright green
+        gc.setFill(Color.web("E31C79"));
+
+        gc.fillText("PRESS X ONCE TO ACTIVATE DEBUG", 600, 440);
     }
 }
 
@@ -922,20 +1331,7 @@ private void drawGrid() {
     }
 
 
-    //debug mode
 
-    private int debugChunksSpawned = 50;
-    private int debugSpawnAmount = 50; //260; // Total chunks to spawn
-    private int spawnEachTickAmount = 2; // How many to spawn per tick
-    private int x = 0, y = 0;
-    private int dx = 1, dy = 0;
-    private int stepSize = 1;
-    private int stepsTaken = 0;
-    private int directionChanges = 0;
-    private boolean isSpawning = false;
-    private Timeline debugUpdater;
-    private long lastTickTime = System.nanoTime();
-    private final long MAX_TICK_TIME_NS = 4_000_000_000L; // 5000ms (5 seconds) in nanoseconds
 
 
     public void debug() {
@@ -943,13 +1339,15 @@ private void drawGrid() {
         if(!isOpen){
             isSpawning = false;
             debugMode = false;
+
             return;
         }
+
 
         debugMode = !debugMode;
         draw();
 
-        if (!isSpawning) {
+        if (!isSpawning && !debugActivated) {
             lastTickTime = System.nanoTime();
             debugChunksSpawned = 0;
             x = 0;
@@ -960,6 +1358,7 @@ private void drawGrid() {
             stepsTaken = 0;
             directionChanges = 0;
             isSpawning = true;
+            debugActivated= true;
 
             // Start a repeating task to update debug spawning
             debugUpdater = new Timeline(new KeyFrame(Duration.millis(100), e -> {
@@ -977,6 +1376,8 @@ private void drawGrid() {
 
 
     public void updateDebugSpawning() {
+
+        StarSystemCache ssc = StarSystemCache.getInstance();
         if (!isSpawning) return; // Stop if spawning was disabled externally
 
         long startTime = System.nanoTime();
@@ -1000,20 +1401,57 @@ private void drawGrid() {
 
         // Spawn chunks
         for (int i = 0; i < spawnLimit && debugChunksSpawned < debugSpawnAmount; i++) {
-            createChunk(x, y);
-            x += dx;
-            y += dy;
-            stepsTaken++;
-            debugChunksSpawned++;
+            //createChunk(x, y, true);
 
-            if (stepsTaken == stepSize) {
-                stepsTaken = 0;
-                directionChanges++;
-                int temp = dx;
-                dx = -dy;
-                dy = temp;
-                if (directionChanges % 2 == 0) stepSize++;
+            Point chunk = new Point(x,y);
+
+            if(chunks.containsKey(chunk)){
+                //dont duplicate
+                System.out.println("already there"+x+" "+y);
             }
+            else {
+                //chunks.putIfAbsent(chunk, new HashSet<>());
+
+
+                int count = determineSSCount(chunk);
+
+                Deque<Point2D.Double> coords = determineStarSystemCoords(count, chunk);
+
+
+                //create chunk in chunks list
+                //chunks.putIfAbsent(chunk, new ArrayList<>());
+
+
+                // write this to a file.
+
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) { // true enables append mode
+                    for (Point2D.Double point : coords) {
+                        writer.write((int)chunk.getX() + " " + (int)chunk.getY() + " " + ssc.getNextSystemId() + " " + point.x + " " + point.y);
+                        writer.newLine();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+
+                x += dx;
+                y += dy;
+                stepsTaken++;
+                debugChunksSpawned++;
+                //System.out.println("spawned chunks #:"+ debugChunksSpawned);
+
+
+                if (stepsTaken == stepSize) {
+                    stepsTaken = 0;
+                    directionChanges++;
+                    int temp = dx;
+                    dx = -dy;
+                    dy = temp;
+                    if (directionChanges % 2 == 0) stepSize++;
+                }
+
         }
 
         lastTickTime = System.nanoTime();
