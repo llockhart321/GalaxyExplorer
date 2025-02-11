@@ -50,7 +50,7 @@ public class StarSystem {
       this.gc=gc;
       
       Random rand = new Random();
-      int numPlanets = rand.nextInt(5) + 1;  // Random number between 1 and 5
+      int numPlanets = rand.nextInt(10) + 1;  // Random number between 1 and 5
       int numAsteroids = rand.nextInt(5) + 1; // Random number between 1 and 5
 
       
@@ -61,7 +61,7 @@ public class StarSystem {
       
       for (int i = 0; i < numPlanets; i++) { //add a random number of planets to the array
          int minRadius = 100;
-         int maxRadius = 250;
+         int maxRadius = 200;
          int minDistance = 800;
          int maxDistance = 2300; //setting mins and maxes for random parameters for planets 
          
