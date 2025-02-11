@@ -415,96 +415,139 @@ public class GalaxyMap {
     
     return coords;
 }    // build gates for a star system. used when chunks are create and new chunks discovered
-    private  void assignGates(int ssID, List<Integer>targetIDs){
+    private void assignGates(int ssID, List<Integer> targetIDs) {
+    List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
 
-        List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
-
-        //create gate
-        for(int i=0; i<targetIDs.size(); i++){
-
-            //make sure gate doesnt go to self
-            if(ssID != targetIDs.get(i)){
-                // make sure gate doesnt already exist
-                boolean exists = false;
-                for (Gate gate : systemGates) {
-                    if (gate.getTargetSystem() == targetIDs.get(i)) {
-                        exists = true;
-                        break;
-                    }
+    // Create gate
+    for (int i = 0; i < targetIDs.size(); i++) {
+        // Make sure gate doesn't go to self
+        if (ssID != targetIDs.get(i)) {
+            // Make sure gate doesn't already exist
+            boolean exists = false;
+            for (Gate gate : systemGates) {
+                if (gate.getTargetSystem() == targetIDs.get(i)) {
+                    exists = true;
+                    break;
                 }
-                // if ssid doesnt already have gate to target
-                if(!exists) {
-
-
-                    int targetSystem = targetIDs.get(i);
-                    int direction = (int)calculateGateDirection(ssID, targetSystem);
-                    //double x = random.nextDouble(50, 700);
-                    //double y = random.nextDouble(20, 300);
-                    StarSystem target = StarSystemCache.getInstance().get(ssID);
-                    String generalArea = getSystemChunkPosition(ssID,getSystemChunk(ssID) );
-                    System.out.println("gate "+ssID+" is near "+generalArea);
-                    javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
-                    target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
-                    systemData.get(ssID).addConnection(targetSystem);
-                }
+            }
+            
+            // If ssid doesn't already have gate to target
+            if (!exists) {
+                int targetSystem = targetIDs.get(i);
+                int direction = (int)calculateGateDirection(ssID, targetSystem);
+                
+                StarSystem target = StarSystemCache.getInstance().get(ssID);
+                // Get the relative position based on the source and target systems
+                String generalArea = getSystemChunkPosition(ssID, targetSystem);
+                System.out.println("gate " + ssID + " to " + targetSystem + " is near " + generalArea);
+                
+                javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
+                target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
+                systemData.get(ssID).addConnection(targetSystem);
             }
         }
     }
+}
 
-
-    /**
-    does not work :(
-     */
-    public String getSystemChunkPosition(int ssID, Point chunkLoc) {
-        SystemData system = systemData.get(ssID);
-        if (system == null) {
-            return "";
-        }
-
-        // Calculate position relative to chunk's origin
-        double chunkStartX = chunkLoc.x * CHUNK_SIZE;
-        double chunkStartY = chunkLoc.y * CHUNK_SIZE;
-
-        // Get relative position within the chunk
-        double relX = system.position.x - chunkStartX;
-        double relY = system.position.y - chunkStartY;
-
-
-        // Define thirds of the chunk
-        double thirdSize = CHUNK_SIZE / 3.0;
-
-        // Determine horizontal position
-        String horizontal;
-        System.out.println("System " + ssID + " relative position: " + relX + ", " + relY);
-System.out.println("Thirds size: " + thirdSize);
-        if (relX < thirdSize) {
-            horizontal = "L";
-        } else if (relX < 2 * thirdSize) {
-            horizontal = "M";
-        } else {
-            horizontal = "R";
-        }
-
-        // Determine vertical position
-        String vertical;
-        if (relY < thirdSize) {
-            vertical = "U";
-        } else if (relY < 2 * thirdSize) {
-            vertical = "M";
-        } else {
-            vertical = "L";
-        }
-
-        // If it's in the middle-middle, shift it to middle-right
-        if (horizontal.equals("M") && vertical.equals("M")) {
-            horizontal = "R";
-        }
-
-        String position = vertical + horizontal;
-        System.out.println("Calculated position: " + position + " for system " + ssID + " in chunk " + chunkLoc);
-        return position;
+    
+    /*public String getSystemChunkPosition(int sourceId, int targetId) {
+    SystemData sourceSystem = systemData.get(sourceId);
+    SystemData targetSystem = systemData.get(targetId);
+    
+    if (sourceSystem == null || targetSystem == null) {
+        return "MR"; // Default to middle right if we can't determine
     }
 
+    // Calculate relative position of target system compared to source
+    double dx = targetSystem.position.x - sourceSystem.position.x;
+    double dy = targetSystem.position.y - sourceSystem.position.y;
+    
+    // Define regions based on angle
+    double angle = Math.toDegrees(Math.atan2(dy, dx));
+    
+    // Normalize angle to 0-360
+    if (angle < 0) {
+        angle += 360;
+    }
+    
+    // Map angles to regions
+    // Upper: 45° to 135°
+    // Lower: 225° to 315°
+    // Left: 135° to 225°
+    // Right: 315° to 45°
+    
+    String vertical = "";
+    String horizontal = "";
+    
+    // Determine vertical position
+    if (angle > 45 && angle <= 135) {
+        vertical = "U";
+    } else if (angle > 225 && angle <= 315) {
+        vertical = "L";
+    } else {
+        vertical = "M";
+    }
+    
+    // Determine horizontal position
+    if (angle > 135 && angle <= 225) {
+        horizontal = "L";
+    } else if ((angle > 315 && angle <= 360) || (angle >= 0 && angle <= 45)) {
+        horizontal = "R";
+    } else {
+        horizontal = "M";
+    }
+    
+    // Special case: if it would be MM, adjust based on angle
+    if (vertical.equals("M") && horizontal.equals("M")) {
+        if (angle > 45 && angle <= 225) {
+            horizontal = "L";
+        } else {
+            horizontal = "R";
+        }
+    }
+    
+    return vertical + horizontal;
+}*/
+
+   public String getSystemChunkPosition(int sourceId, int targetId) {
+    SystemData sourceSystem = systemData.get(sourceId);
+    SystemData targetSystem = systemData.get(targetId);
+    
+    if (sourceSystem == null || targetSystem == null) {
+        return "MR";
+    }
+
+    // Calculate relative position of target system compared to source
+    double dx = targetSystem.position.x - sourceSystem.position.x;
+    double dy = targetSystem.position.y - sourceSystem.position.y;
+    
+    // Calculate angle in degrees, with 0 being right, going counterclockwise
+    double angle = Math.toDegrees(Math.atan2(dy, dx));
+    
+    // Normalize angle to 0-360
+    if (angle < 0) {
+        angle += 360;
+    }
+    
+    // Define more precise angle ranges for each region
+    // Remember: angle 0 is right, 90 is down, 180 is left, 270 is up
+    
+    // First determine if we're in a cardinal or diagonal region
+    double normalizedAngle = (angle + 22.5) % 360;
+    int octant = (int)(normalizedAngle / 45);
+    
+    switch (octant) {
+        case 0: return "MR";  // Right
+        case 1: return "LR";  // Lower Right
+        case 2: return "LM";  // Lower
+        case 3: return "LL";  // Lower Left
+        case 4: return "ML";  // Left
+        case 5: return "UL";  // Upper Left
+        case 6: return "UM";  // Upper
+        case 7: return "UR";  // Upper Right
+        default: return "MR"; // Shouldn't happen, but default to MR
+    }
+}
 
     public double calculateGateDirection(int sourceId, int targetId) {
         SystemData sourceSystem = systemData.get(sourceId);
