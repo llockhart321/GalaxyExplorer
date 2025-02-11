@@ -77,8 +77,8 @@ public class StarSystem {
       }
       
               // Generate asteroids
-      int maxAstDist = 800;
-      int minAstDist = 400;
+      int maxAstDist = 1500;
+      int minAstDist = 800;
       
       int asteroidDistance = rand.nextInt(maxAstDist - minAstDist + 1) + minAstDist; // Fixed distance for all asteroids
       for (int i = 0; i < numAsteroids; i++) {
