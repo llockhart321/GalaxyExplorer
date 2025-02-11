@@ -880,7 +880,7 @@ private void drawGrid() {
     //debug mode
 
     private int debugChunksSpawned = 0;
-    private int debugSpawnAmount = 250; //260; // Total chunks to spawn
+    private int debugSpawnAmount = 50; //260; // Total chunks to spawn
     private int spawnEachTickAmount = 2; // How many to spawn per tick
     private int x = 0, y = 0;
     private int dx = 1, dy = 0;
