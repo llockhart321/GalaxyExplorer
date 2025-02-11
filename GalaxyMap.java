@@ -185,10 +185,8 @@ public class GalaxyMap {
         //int ssCount = random.nextInt(3,5);
         int ssCount = determineSSCount(chunk);
 
-        //get ss coordinates to draw in map to make spiral
-        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount, chunk);
 
-        // write to file
+
 
         // if debug do not create and all that. else develope ss and all that.
         if(debug){
@@ -198,15 +196,66 @@ public class GalaxyMap {
         // add ss' to chunk
 
         for(int i=0; i<ssCount; i++) {
-            //first create system
-            int newSys = StarSystemCache.getInstance().createSystem(gc);
-            //then add system to chunks list
-            Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
-            starSystems.add(newSys);
-            //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
+
+            //if it exists in debug.
+
+            String foundLine = null;
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(" ");
+                    if (parts.length < 3) continue;  // Ensure valid format
+
+                    int chunkX = Integer.parseInt(parts[0]);
+                    int chunkY = Integer.parseInt(parts[1]);
+
+                    if (chunkX == chunkLocX && chunkY == chunkLocY) {
+                        foundLine = line;  // Store the full line and stop searching
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            int newSys=-1;
+            SystemData sysData;
+            // Process the found line if it exists
+            if (foundLine != null) {
+                String[] parts = foundLine.split(" "); // Split by spaces
+
+                //int chunkX = Integer.parseInt(parts[0]);
+                //int chunkY = Integer.parseInt(parts[1]);
+                int ssid = Integer.parseInt(parts[2]);
+                double x = Double.parseDouble(parts[3]);
+                double y = Double.parseDouble(parts[4]);
+
+                 newSys = StarSystemCache.getInstance().createSystem(gc, ssid);
+                //then add system to chunks list
+                Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
+                starSystems.add(newSys);
+                //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
 
 
-            SystemData sysData = new SystemData(newSys, coords.pop());
+                sysData = new SystemData(newSys, new Point2D.Double(x,y));
+
+            } else {
+                //NOT FOUND
+                //System.out.println("Chunk not found.");
+                newSys = StarSystemCache.getInstance().createSystem(gc);
+                //then add system to chunks list
+                Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
+                starSystems.add(newSys);
+                //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
+
+
+                //get ss coordinates to draw in map to make spiral
+                Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount, chunk);
+                sysData = new SystemData(newSys, coords.pop());
+            }
+
+
             systemData.put(newSys, sysData);
 
 
@@ -250,66 +299,7 @@ public class GalaxyMap {
     }
 
 
-    private void loadSS(Point chunk){
 
-
-
-        /*
-        for(int i=0; i<ssCount; i++) {
-            //first create system
-            int newSys = StarSystemCache.getInstance().createSystem(gc);
-            //then add system to chunks list
-            Set<Integer> starSystems = chunks.computeIfAbsent(chunk, k -> new HashSet<>());
-            starSystems.add(newSys);
-            //chunks.computeIfAbsent(chunk, k -> new ArrayList<>()).add(newSys);
-
-
-            SystemData sysData = new SystemData(newSys, coords.pop());
-            systemData.put(newSys, sysData);
-
-
-
-
-
-        }
-
-
-        // add gates to all the star systems we have just created
-        //List<Integer> allStarSystems = chunks.getOrDefault(chunk, Collections.emptyList());
-        Set<Integer> allStarSystemsSet = chunks.getOrDefault(chunk, Collections.emptySet());
-
-
-        System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
-
-        List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
-        //assign gates
-        for(Integer systemId : allStarSystems){
-            assignGates(systemId, allStarSystems);
-        }
-
-        //chunks.getOrDefault(new Point(0, 0), Collections.emptyList())
-        //find possible connections for current ss
-
-        //first add all gates for local group
-        // call method to get general area for each gate
-        // make a map :( of allstarsystems and their general area string
-
-        //add gates to each ss
-        //assignGates(allStarSystems.get(i), allStarSystems);
-
-        // find ss' on edges to go to other chunks
-        // make the gates to go to other edges.
-
-
-
-
-
-
-        handleNeighbors();
-
-         */
-
-    }
 
 
     private void handleNeighbors(){
@@ -1067,6 +1057,43 @@ public class GalaxyMap {
             dotSize * 1.5,
             dotSize * 1.5
         );
+
+
+        if(debugMode){
+            //Deque<Point2D.Double> coords = new ArrayDeque<>();
+            //Map<Integer, Point2D.Double> lastCoords = new HashMap<>();
+            gc.setFill(Color.WHITE);
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(" ");
+                    // int chunkX = Integer.parseInt(parts[0]);
+                    //int chunkY = Integer.parseInt(parts[1]);
+                    //int ssid = Integer.parseInt(parts[2]);
+                    double x = Double.parseDouble(parts[3]);
+                    double y = Double.parseDouble(parts[4]);
+
+                    // Update the last coordinates of the star system
+                    // lastCoords.put(ssid, new Point2D.Double(x, y));
+
+                    gc.fillOval(
+                            (x - viewX) * scale + (WIDTH / 2.0) - dotSize / 2,
+                            (y - viewY) * scale + (HEIGHT / 2.0) - dotSize / 2,
+                            dotSize,
+                            dotSize
+                    );
+                    dc++;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            //gc.setFill(Color.rgb(128, 0, 255));
+            //gc.setFill(Color.WHITE);
+
+        }
         
         // Main dot
         Color systemColor = system.id == currentSystem ? 
@@ -1100,34 +1127,7 @@ public class GalaxyMap {
 
 
 
-        if(debugMode){
-            Deque<Point2D.Double> coords = new ArrayDeque<>();
-            try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-                String line;
-                gc.setFill(Color.WHITE);
-                while ((line = reader.readLine()) != null) {
-                    String[] parts = line.split(" ");
-                    double x = Double.parseDouble(parts[0]);
-                    double y = Double.parseDouble(parts[1]);
-                    gc.fillOval(
-                            (x - viewX) * scale + (WIDTH / 2.0)-dotSize/2,
-                            (y - viewY) * scale + (HEIGHT / 2.0)-dotSize/2,
-                            dotSize,
-                            dotSize
-                    );
-                    //System.out.println("drew "+dc);
-                    dc++;
 
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            //gc.setFill(Color.rgb(128, 0, 255));
-            //gc.setFill(Color.WHITE);
-
-        }
     }
 
     if(!debugActivated){
@@ -1376,6 +1376,8 @@ private void drawGrid() {
 
 
     public void updateDebugSpawning() {
+
+        StarSystemCache ssc = StarSystemCache.getInstance();
         if (!isSpawning) return; // Stop if spawning was disabled externally
 
         long startTime = System.nanoTime();
@@ -1424,15 +1426,13 @@ private void drawGrid() {
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) { // true enables append mode
                     for (Point2D.Double point : coords) {
-                        writer.write(point.x + " " + point.y);
+                        writer.write((int)chunk.getX() + " " + (int)chunk.getY() + " " + ssc.getNextSystemId() + " " + point.x + " " + point.y);
                         writer.newLine();
-
-
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-
                 }
+
             }
 
 

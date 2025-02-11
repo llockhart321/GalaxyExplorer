@@ -336,8 +336,12 @@ public class Gate {
         spawnY += spawnOffsetDistance * Math.sin(angleInRadians);
 
         // Set initial player position
-        player.setX(spawnX);
-        player.setY(spawnY);
+        double radians = Math.toRadians(direction);
+        double dx = Math.cos(radians) * 5;
+        double dy = Math.sin(radians) * 5;
+        
+        player.setX(spawnX+=dx);
+        player.setY(spawnY+=dy);
 
         // Check if spawn position is safe
         boolean isColliding = false;

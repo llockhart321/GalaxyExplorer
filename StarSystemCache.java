@@ -26,6 +26,9 @@ public class StarSystemCache {
     public synchronized int generateNextSystemId() {
         return nextSystemId++;
     }
+    public synchronized int getNextSystemId() {
+        return nextSystemId;
+    }
 
     // Reset the ID counter (useful for starting a new game)
     public synchronized void resetIdCounter() {
@@ -66,13 +69,12 @@ public class StarSystemCache {
         return newSystem.getID();
     }
 
-    // Create a new star system with a specific location
-    public StarSystem createSystem(GraphicsContext gc, double x, double y) {
-        StarSystem newSystem = new StarSystem(gc, -1);
-        newSystem.setxLoc(x);
-        newSystem.setyLoc(y);
+    // Create a new star system with a specific id
+    public int createSystem(GraphicsContext gc, int id) {
+
+        StarSystem newSystem = new StarSystem(gc, id);
         add(newSystem);
-        return newSystem;
+        return newSystem.getID();
     }
 
     // Debug method to print all cached systems
