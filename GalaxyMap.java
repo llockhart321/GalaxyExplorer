@@ -14,6 +14,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import java.util.Random;
 import javafx.scene.shape.StrokeLineCap;
@@ -108,7 +109,7 @@ public class GalaxyMap {
     //debug mode
 
     private int debugChunksSpawned = 0;
-    private int debugSpawnAmount = 50000; //260; // Total chunks to spawn  goal 2500 chunks. 10000 starsystems
+    private int debugSpawnAmount = 80000; //260; // Total chunks to spawn  goal 2500 chunks. 10000 starsystems
 
     private int spawnEachTickAmount = 200; // How many to spawn per tick
     private int x = 0, y = 0;
@@ -131,7 +132,8 @@ public class GalaxyMap {
     private  final double V = 0.25; // Spiral 2 coefficient
     private static final double B = 0.2;  // Keep original growth rate
     private static final double Z = 0.015;  // Even smaller initial radius og 0.15
-    private static  double ARM_WIDTH = CHUNK_SIZE * 0.04;  // Slightly thicker than original
+    private static  double ARM_WIDTH = CHUNK_SIZE * 0.045;  // Slightly thicker than original
+    private boolean debugActivated = false;
 
 
 
@@ -170,6 +172,7 @@ public class GalaxyMap {
         //chunks.putIfAbsent(chunk, new ArrayList<>());
 
         if(chunks.containsKey(chunk)){
+
             return;
         }
 
@@ -1082,6 +1085,15 @@ public class GalaxyMap {
 
         }
     }
+
+    if(!debugActivated){
+        gc.setFont(new Font("Arial", 10));
+
+        // Set color to neon bright green
+        gc.setFill(Color.web("E31C79"));
+
+        gc.fillText("PRESS X ONCE TO ACTIVATE DEBUG", 600, 440);
+    }
 }
 
 private void drawGrid() {
@@ -1283,13 +1295,15 @@ private void drawGrid() {
         if(!isOpen){
             isSpawning = false;
             debugMode = false;
+
             return;
         }
+
 
         debugMode = !debugMode;
         draw();
 
-        if (!isSpawning) {
+        if (!isSpawning && !debugActivated) {
             lastTickTime = System.nanoTime();
             debugChunksSpawned = 0;
             x = 0;
@@ -1300,6 +1314,7 @@ private void drawGrid() {
             stepsTaken = 0;
             directionChanges = 0;
             isSpawning = true;
+            debugActivated= true;
 
             // Start a repeating task to update debug spawning
             debugUpdater = new Timeline(new KeyFrame(Duration.millis(100), e -> {
@@ -1316,8 +1331,6 @@ private void drawGrid() {
     }
 
 
-    private int dsc = 0;
-    private int genc = 0;
     public void updateDebugSpawning() {
         if (!isSpawning) return; // Stop if spawning was disabled externally
 
@@ -1343,49 +1356,58 @@ private void drawGrid() {
         // Spawn chunks
         for (int i = 0; i < spawnLimit && debugChunksSpawned < debugSpawnAmount; i++) {
             //createChunk(x, y, true);
-            System.out.println("wrote "+dsc);
-            System.out.println("genc "+genc);
-            genc++;
 
             Point chunk = new Point(x,y);
-            int count = determineSSCount(chunk);
-            System.out.println("SS Count for " + chunk + ": " + count);
 
-            Deque<Point2D.Double> coords = determineStarSystemCoords(count, chunk);
-            // write this to a file.
+            if(chunks.containsKey(chunk)){
+                //dont duplicate
+                System.out.println("already there"+x+" "+y);
+            }
+            else {
+                //chunks.putIfAbsent(chunk, new HashSet<>());
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) { // true enables append mode
-                for (Point2D.Double point : coords) {
-                    writer.write(point.x + " " + point.y);
-                    writer.newLine();
-                    dsc++;
-                    System.out.println("wrote "+dsc);
+
+                int count = determineSSCount(chunk);
+
+                Deque<Point2D.Double> coords = determineStarSystemCoords(count, chunk);
+
+
+                //create chunk in chunks list
+                //chunks.putIfAbsent(chunk, new ArrayList<>());
+
+
+                // write this to a file.
+
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) { // true enables append mode
+                    for (Point2D.Double point : coords) {
+                        writer.write(point.x + " " + point.y);
+                        writer.newLine();
+
+
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
 
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("\n\n\nerror at\n\n\n\n"+dc);
             }
 
 
+                x += dx;
+                y += dy;
+                stepsTaken++;
+                debugChunksSpawned++;
+                //System.out.println("spawned chunks #:"+ debugChunksSpawned);
 
 
+                if (stepsTaken == stepSize) {
+                    stepsTaken = 0;
+                    directionChanges++;
+                    int temp = dx;
+                    dx = -dy;
+                    dy = temp;
+                    if (directionChanges % 2 == 0) stepSize++;
+                }
 
-            x += dx;
-            y += dy;
-            stepsTaken++;
-            debugChunksSpawned++;
-            //System.out.println("spawned chunks #:"+ debugChunksSpawned);
-
-
-            if (stepsTaken == stepSize) {
-                stepsTaken = 0;
-                directionChanges++;
-                int temp = dx;
-                dx = -dy;
-                dy = temp;
-                if (directionChanges % 2 == 0) stepSize++;
-            }
         }
 
         lastTickTime = System.nanoTime();

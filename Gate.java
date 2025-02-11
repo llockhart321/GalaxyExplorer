@@ -130,19 +130,7 @@ public class Gate {
 
       gc.restore();
 
-      // Debug rectangle (already using screen coordinates)
-      gc.setStroke(Color.RED);
-       gc.setLineWidth(20);
-
-       // Calculate the center of the rectangle
-       double activateBoundsCenterX = activateBounds.getX() + activateBounds.getWidth() / 2;
-       double activateBoundsCenterY = activateBounds.getY() + activateBounds.getHeight() / 2;
-
-       // Rotate the rectangle
-       Rotate rotate = new Rotate(direction, activateBoundsCenterX, activateBoundsCenterY);
-       //activateBounds.getTransforms().add(rotate);
-       gc.strokeRect(activateBounds.getX(), activateBounds.getY(), activateBounds.getWidth(), 2000);
-       //activateBounds.getHeight()
+      
 
       // Label (already using screen coordinates)
       gc.setFill(Color.CYAN);
