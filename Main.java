@@ -36,7 +36,7 @@ public class Main extends Application {
 
       //StarSystem startSystem = new StarSystem(gc, -1);
       //StarSystemCache.getInstance().add(startSystem);
-      GalaxyMap.getInstance().createChunk(0,0);
+      GalaxyMap.getInstance().createChunk(0,0, false);
       GalaxyMap.getInstance().setCurrentSystem(0);
 
       
