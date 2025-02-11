@@ -5,7 +5,12 @@ import javafx.scene.*;
 import javafx.scene.canvas.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
+
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.util.List;
+
+import javafx.scene.transform.Rotate;
 import javafx.stage.*;
 import java.util.Random;
 
@@ -43,24 +48,38 @@ public class Gate {
         // Update rectangle bounds to match current position
       if (activateBounds == null) {
           activateBounds = new Rectangle(x, y+30, sizeX, sizeY);
+          activateBounds = rotateRectangle(activateBounds, direction);
       } else {
           activateBounds.setX(x);
           activateBounds.setY(y+30);
           activateBounds.setWidth(sizeX);
           activateBounds.setHeight(sizeY);
+          activateBounds = rotateRectangle(activateBounds, direction);
       }
        if (bottomBounds == null) {
            bottomBounds = new Rectangle(x, y+40, sizeX, sizeY-10);
+           bottomBounds = rotateRectangle(bottomBounds, direction);
        } else {
            bottomBounds.setX(x);
            bottomBounds.setY(y+40);
            bottomBounds.setWidth(sizeX);
            bottomBounds.setHeight(sizeY);
+           bottomBounds = rotateRectangle(bottomBounds, direction);
        }
 
    }
 
+    public static Rectangle rotateRectangle(Rectangle rect, double angle) {
+        // Calculate the center of the rectangle
+        double centerX = rect.getX() + rect.getWidth() / 2;
+        double centerY = rect.getY() + rect.getHeight() / 2;
 
+        // Rotate the rectangle by the given angle around its center
+        Rotate rotate = new Rotate(angle, centerX, centerY);
+        rect.getTransforms().add(rotate);
+
+        return rect;
+    }
 
 
    public void drawMe(GraphicsContext gc, double cameraOffsetX, double cameraOffsetY) {
@@ -113,7 +132,17 @@ public class Gate {
 
       // Debug rectangle (already using screen coordinates)
       gc.setStroke(Color.RED);
-      gc.strokeRect(screenX, screenY+30, sizeX, sizeY);
+       gc.setLineWidth(20);
+
+       // Calculate the center of the rectangle
+       double activateBoundsCenterX = activateBounds.getX() + activateBounds.getWidth() / 2;
+       double activateBoundsCenterY = activateBounds.getY() + activateBounds.getHeight() / 2;
+
+       // Rotate the rectangle
+       Rotate rotate = new Rotate(direction, activateBoundsCenterX, activateBoundsCenterY);
+       //activateBounds.getTransforms().add(rotate);
+       gc.strokeRect(activateBounds.getX(), activateBounds.getY(), activateBounds.getWidth(), 2000);
+       //activateBounds.getHeight()
 
       // Label (already using screen coordinates)
       gc.setFill(Color.CYAN);
@@ -162,7 +191,7 @@ public class Gate {
    
 
    
-    public void activate(GraphicsContext gc) {
+    /*public void activate(GraphicsContext gc) {
         StarSystem newSys;
         int oldSys = this.system;  // Store the original system
 
@@ -285,7 +314,95 @@ public class Gate {
 
         // Set the system after positioning the player
         player.setSystem(newSys);
+    }*/
+    
+    public void activate(GraphicsContext gc) {
+    StarSystem newSys;
+    int oldSys = this.system;
+
+    // Get the new system from cache
+    newSys = StarSystemCache.getInstance().get(targetSystem);
+    Player player = Player.getInstance();
+
+    // Find the corresponding gate in the new system
+    Gate destinationGate = null;
+    List<Gate> systemGates = newSys.getGates();
+
+    for (Gate gate : systemGates) {
+        if (gate.targetSystem == oldSys) {
+            destinationGate = gate;
+            break;
+        }
     }
+
+    if (destinationGate != null) {
+        // Calculate spawn position in front of the destination gate
+        double spawnOffsetDistance = 100; // Increased distance to prevent immediate re-triggering
+        double spawnX = destinationGate.x;
+        double spawnY = destinationGate.y;
+
+        // Convert rotation to radians for precise positioning
+        double angleInRadians = Math.toRadians(destinationGate.direction);
+        
+        // Calculate offset using trigonometry for more precise positioning
+        spawnX += spawnOffsetDistance * Math.cos(angleInRadians);
+        spawnY += spawnOffsetDistance * Math.sin(angleInRadians);
+
+        // Set initial player position
+        player.setX(spawnX);
+        player.setY(spawnY);
+
+        // Check if spawn position is safe
+        boolean isColliding = false;
+        for (Planet planet : newSys.getPlanets()) {
+            if (planet.isCollidingWith(player)) {
+                isColliding = true;
+                break;
+            }
+        }
+
+        // If collision detected, try alternative positions with increasing distances
+        if (isColliding) {
+            System.out.println("Initial spawn position unsafe, trying alternatives");
+            double[] distances = {150, 200, 250}; // Try increasingly larger distances
+            
+            for (double distance : distances) {
+                spawnX = destinationGate.x + (distance * Math.cos(angleInRadians));
+                spawnY = destinationGate.y + (distance * Math.sin(angleInRadians));
+                
+                player.setX(spawnX);
+                player.setY(spawnY);
+
+                isColliding = false;
+                for (Planet planet : newSys.getPlanets()) {
+                    if (planet.isCollidingWith(player)) {
+                        isColliding = true;
+                        break;
+                    }
+                }
+
+                if (!isColliding) {
+                    System.out.println("Found safe position at distance: " + distance);
+                    break;
+                }
+            }
+
+            // If still no safe spot found, use a fallback position
+            if (isColliding) {
+                System.out.println("No safe position found, using fallback");
+                player.setX(800);
+                player.setY(800);
+            }
+        }
+    } else {
+        System.out.println("No matching gate found in new system");
+        player.setX(800);
+        player.setY(800);
+    }
+
+    // Set the system after positioning the player
+    player.setSystem(newSys);
+}
 
     public int getTargetSystem(){
         return targetSystem;

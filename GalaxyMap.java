@@ -78,7 +78,7 @@ public class GalaxyMap {
 
 
 
-    private int CHUNK_SIZE = 50;
+    private static final double CHUNK_SIZE = 1000.0;
 
 
 
@@ -149,7 +149,7 @@ public class GalaxyMap {
         int ssCount = random.nextInt(3,5);
 
         //get ss coordinates to draw in map to make spiral
-        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount);
+        Deque<Point2D.Double> coords = determineStarSystemCoords(ssCount, chunk);
 
         // add ss' to chunk
 
@@ -357,7 +357,7 @@ public class GalaxyMap {
 
 
 
-    private  Deque<Point2D.Double> determineStarSystemCoords(int ssCount){
+    /*private  Deque<Point2D.Double> determineStarSystemCoords(int ssCount){
 
         //wizard level code to find spiral locations ;)
 
@@ -370,42 +370,215 @@ public class GalaxyMap {
 
         }
         return coords;
+    }*/
+    private Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
+    Deque<Point2D.Double> coords = new ArrayDeque<>();
+    
+    // Get the chunk bounds (assuming we're working in a single chunk)
+    double minX = 0;
+    double maxX = 800;  // Match the WIDTH constant
+    double minY = 0;
+    double maxY = 450;  // Match the HEIGHT constant
+    
+    // Center point for the spiral
+    double centerX = (maxX + minX) / 2.0;
+    double centerY = (maxY + minY) / 2.0;
+    
+    // Spiral parameters
+    double initialRadius = 50;  // Starting radius
+    double growthFactor = 0.3;  // How quickly the spiral expands
+    double angleStep = 2 * Math.PI / ssCount;  // Even distribution of points
+    
+    for (int i = 0; i < ssCount; i++) {
+        // Calculate angle and radius
+        double angle = i * angleStep;
+        double radius = initialRadius + (growthFactor * angle);
+        
+        // Calculate base position
+        double x = centerX + (radius * Math.cos(angle));
+        double y = centerY + (radius * Math.sin(angle));
+        
+        // Add some random variation
+        double randomRadius = random.nextDouble(0, 20);
+        double randomAngle = random.nextDouble(0, 2 * Math.PI);
+        x += randomRadius * Math.cos(randomAngle);
+        y += randomRadius * Math.sin(randomAngle);
+        
+        // Ensure points stay within bounds
+        x = Math.max(minX + 50, Math.min(x, maxX - 50));
+        y = Math.max(minY + 50, Math.min(y, maxY - 50));
+
+        x+=chunk.getX()*CHUNK_SIZE;
+        y+=chunk.getY()*CHUNK_SIZE;
+        coords.add(new Point2D.Double(x, y));
     }
+    
+    return coords;
+}    // build gates for a star system. used when chunks are create and new chunks discovered
+    private void assignGates(int ssID, List<Integer> targetIDs) {
+    List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
 
-
-
-
-    // build gates for a star system. used when chunks are create and new chunks discovered
-    private  void assignGates(int ssID, List<Integer>targetIDs){
-
-        List<Gate> systemGates = StarSystemCache.getInstance().get(ssID).getGates();
-
-        //create gate
-        for(int i=0; i<targetIDs.size(); i++){
-
-            //make sure gate doesnt go to self
-            if(ssID != targetIDs.get(i)){
-                // make sure gate doesnt already exist
-                boolean exists = false;
-                for (Gate gate : systemGates) {
-                    if (gate.getTargetSystem() == targetIDs.get(i)) {
-                        exists = true;
-                        break;
-                    }
-                }
-                // if ssid doesnt already have gate to target
-                if(!exists) {
-
-                    int direction = 0;
-                    int targetSystem = targetIDs.get(i);
-                    double x = random.nextDouble(50, 700);
-                    double y = random.nextDouble(20, 300);
-                    //getValidGateSpawn(string generalArea)
-                    StarSystemCache.getInstance().get(ssID).addGate(new Gate(direction, targetSystem, x, y, ssID));
-                    systemData.get(ssID).addConnection(targetSystem);
+    // Create gate
+    for (int i = 0; i < targetIDs.size(); i++) {
+        // Make sure gate doesn't go to self
+        if (ssID != targetIDs.get(i)) {
+            // Make sure gate doesn't already exist
+            boolean exists = false;
+            for (Gate gate : systemGates) {
+                if (gate.getTargetSystem() == targetIDs.get(i)) {
+                    exists = true;
+                    break;
                 }
             }
+            
+            // If ssid doesn't already have gate to target
+            if (!exists) {
+                int targetSystem = targetIDs.get(i);
+                int direction = (int)calculateGateDirection(ssID, targetSystem);
+                
+                StarSystem target = StarSystemCache.getInstance().get(ssID);
+                // Get the relative position based on the source and target systems
+                String generalArea = getSystemChunkPosition(ssID, targetSystem);
+                System.out.println("gate " + ssID + " to " + targetSystem + " is near " + generalArea);
+                
+                javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
+                target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
+                systemData.get(ssID).addConnection(targetSystem);
+            }
         }
+    }
+}
+
+    
+    /*public String getSystemChunkPosition(int sourceId, int targetId) {
+    SystemData sourceSystem = systemData.get(sourceId);
+    SystemData targetSystem = systemData.get(targetId);
+    
+    if (sourceSystem == null || targetSystem == null) {
+        return "MR"; // Default to middle right if we can't determine
+    }
+
+    // Calculate relative position of target system compared to source
+    double dx = targetSystem.position.x - sourceSystem.position.x;
+    double dy = targetSystem.position.y - sourceSystem.position.y;
+    
+    // Define regions based on angle
+    double angle = Math.toDegrees(Math.atan2(dy, dx));
+    
+    // Normalize angle to 0-360
+    if (angle < 0) {
+        angle += 360;
+    }
+    
+    // Map angles to regions
+    // Upper: 45° to 135°
+    // Lower: 225° to 315°
+    // Left: 135° to 225°
+    // Right: 315° to 45°
+    
+    String vertical = "";
+    String horizontal = "";
+    
+    // Determine vertical position
+    if (angle > 45 && angle <= 135) {
+        vertical = "U";
+    } else if (angle > 225 && angle <= 315) {
+        vertical = "L";
+    } else {
+        vertical = "M";
+    }
+    
+    // Determine horizontal position
+    if (angle > 135 && angle <= 225) {
+        horizontal = "L";
+    } else if ((angle > 315 && angle <= 360) || (angle >= 0 && angle <= 45)) {
+        horizontal = "R";
+    } else {
+        horizontal = "M";
+    }
+    
+    // Special case: if it would be MM, adjust based on angle
+    if (vertical.equals("M") && horizontal.equals("M")) {
+        if (angle > 45 && angle <= 225) {
+            horizontal = "L";
+        } else {
+            horizontal = "R";
+        }
+    }
+    
+    return vertical + horizontal;
+}*/
+
+   public String getSystemChunkPosition(int sourceId, int targetId) {
+    SystemData sourceSystem = systemData.get(sourceId);
+    SystemData targetSystem = systemData.get(targetId);
+    
+    if (sourceSystem == null || targetSystem == null) {
+        return "MR";
+    }
+
+    // Calculate relative position of target system compared to source
+    double dx = targetSystem.position.x - sourceSystem.position.x;
+    double dy = targetSystem.position.y - sourceSystem.position.y;
+    
+    // Calculate angle in degrees, with 0 being right, going counterclockwise
+    double angle = Math.toDegrees(Math.atan2(dy, dx));
+    
+    // Normalize angle to 0-360
+    if (angle < 0) {
+        angle += 360;
+    }
+    
+    // Define more precise angle ranges for each region
+    // Remember: angle 0 is right, 90 is down, 180 is left, 270 is up
+    
+    // First determine if we're in a cardinal or diagonal region
+    double normalizedAngle = (angle + 22.5) % 360;
+    int octant = (int)(normalizedAngle / 45);
+    
+    switch (octant) {
+        case 0: return "MR";  // Right
+        case 1: return "LR";  // Lower Right
+        case 2: return "LM";  // Lower
+        case 3: return "LL";  // Lower Left
+        case 4: return "ML";  // Left
+        case 5: return "UL";  // Upper Left
+        case 6: return "UM";  // Upper
+        case 7: return "UR";  // Upper Right
+        default: return "MR"; // Shouldn't happen, but default to MR
+    }
+}
+
+    public double calculateGateDirection(int sourceId, int targetId) {
+        SystemData sourceSystem = systemData.get(sourceId);
+        SystemData targetSystem = systemData.get(targetId);
+
+        if (sourceSystem == null || targetSystem == null) {
+            return 0.0;
+        }
+
+        // Get the vector from source to target
+        double dx = targetSystem.position.x - sourceSystem.position.x;
+        double dy = targetSystem.position.y - sourceSystem.position.y;
+
+        // Calculate angle in radians, convert to degrees
+        // Math.atan2 returns angle in range -π to π
+        double angle = Math.toDegrees(Math.atan2(dy, dx));
+
+        // Add 90 degrees because gates are drawn pointing up by default
+        // Then add 180 because we want the back of the gate to face the target
+        angle += 270;
+
+        // Normalize to 0-360 range
+        angle = angle % 360;
+        if (angle < 0) {
+            angle += 360;
+        }
+
+        System.out.println("Gate from system " + sourceId + " to " + targetId +
+                " rotated " + angle + " degrees");
+
+        return angle;
     }
 
 
@@ -482,77 +655,94 @@ public class GalaxyMap {
 
     //draw
     private void draw() {
-        // Clear background
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, WIDTH, HEIGHT);
-
-
-        // Update screen positions for all systems that will be drawn
-        systemData.values().forEach(sys -> {
-            sys.updateScreenPosition(viewX, viewY, scale);
-        });
-
-        // Draw connections
-        gc.setLineWidth(1.0 * scale);
-        for (SystemData systemA : systemData.values()) {
-            // Skip if system is not in view
-            if (!systemA.isInView) continue;
-            // In normal mode, skip if not within one hop
-            if (!debugMode && !isOneHopFromVisited(systemA)) continue;
-
-            for (int connectedId : systemA.connections) {
-                SystemData systemB = systemData.get(connectedId);
-                if (systemB == null || !systemB.isInView) continue;
-
-                // Only draw connection if it meets our criteria
-                if (!shouldDrawConnection(systemA, systemB)) continue;
-
-                // Set connection color based on visited status of both systems
-                if (systemA.visited && systemB.visited) {
-                    gc.setStroke(Color.WHITE);  // Both systems visited = white connection
-                } else {
-                    gc.setStroke(Color.GRAY);   // At least one system unvisited = gray connection
-                }
-
-                gc.strokeLine(systemA.screenX, systemA.screenY,
-                        systemB.screenX, systemB.screenY);
-            }
-        }
-
-        // Draw systems
-        double dotSize = 6.0 * scale;
-        for (SystemData system : systemData.values()) {
-            // Skip if system is not in view
-            if (!system.isInView) continue;
-            // In normal mode, skip if not within one hop
-            if (!debugMode && !isOneHopFromVisited(system)) continue;
-
-            // Set system color
-            if (system.id == currentSystem) {
-                gc.setFill(Color.PURPLE);
-            } else if (system.visited) {
-                gc.setFill(Color.WHITE);
-            } else {
-                gc.setFill(Color.GRAY);
-            }
-
-            gc.fillOval(
-                    system.screenX - dotSize/2,
-                    system.screenY - dotSize/2,
-                    dotSize,
-                    dotSize
-            );
-
-            // Draw system ID
-            gc.setFill(Color.CYAN);
-            gc.setFont(javafx.scene.text.Font.font(8.0 * scale));
-            gc.fillText(
-                    String.valueOf(system.id),
-                    system.screenX + dotSize,
-                    system.screenY - dotSize
-            );
+    // Draw grid background
+    gc.setFill(Color.rgb(0, 0, 20));
+    gc.fillRect(0, 0, WIDTH, HEIGHT);
+    drawGrid();
+    
+    systemData.values().forEach(sys -> sys.updateScreenPosition(viewX, viewY, scale));
+    
+    // Draw connections with glow
+    gc.setLineWidth(2.0 * scale);
+    for (SystemData systemA : systemData.values()) {
+        if (!systemA.isInView || (!debugMode && !isOneHopFromVisited(systemA))) continue;
+        
+        for (int connectedId : systemA.connections) {
+            SystemData systemB = systemData.get(connectedId);
+            if (systemB == null || !systemB.isInView || !shouldDrawConnection(systemA, systemB)) continue;
+            
+            // Glow effect
+            gc.setStroke(Color.rgb(0, 255, 255, 0.3));
+            gc.setLineWidth(4.0 * scale);
+            gc.strokeLine(systemA.screenX, systemA.screenY, systemB.screenX, systemB.screenY);
+            
+            // Main line
+            gc.setStroke(systemA.visited && systemB.visited ? 
+                Color.rgb(255, 51, 153) : // Hot pink
+                Color.rgb(128, 0, 255));   // Purple
+            gc.setLineWidth(2.0 * scale);
+            gc.strokeLine(systemA.screenX, systemA.screenY, systemB.screenX, systemB.screenY);
         }
     }
+    
+    // Draw systems
+    double dotSize = 8.0 * scale;
+    for (SystemData system : systemData.values()) {
+        if (!system.isInView || (!debugMode && !isOneHopFromVisited(system))) continue;
+        
+        // Glow effect
+        gc.setFill(Color.rgb(0, 255, 255, 0.3));
+        gc.fillOval(
+            system.screenX - (dotSize * 1.5)/2,
+            system.screenY - (dotSize * 1.5)/2,
+            dotSize * 1.5,
+            dotSize * 1.5
+        );
+        
+        // Main dot
+        Color systemColor = system.id == currentSystem ? 
+            Color.rgb(255, 51, 153) : // Current system: Hot pink
+            system.visited ? 
+                Color.rgb(0, 255, 255) : // Visited: Cyan
+                Color.rgb(128, 0, 255);   // Unvisited: Purple
+        
+        gc.setFill(systemColor);
+        gc.fillOval(
+            system.screenX - dotSize/2,
+            system.screenY - dotSize/2,
+            dotSize,
+            dotSize
+        );
+        
+        // System ID with glow
+        gc.setFill(Color.rgb(0, 255, 255, 0.5));
+        gc.setFont(javafx.scene.text.Font.font("Arial", 10.0 * scale));
+        gc.fillText(
+            String.valueOf(system.id),
+            system.screenX + dotSize,
+            system.screenY - dotSize
+        );
+        gc.setFill(Color.WHITE);
+        gc.fillText(
+            String.valueOf(system.id),
+            system.screenX + dotSize,
+            system.screenY - dotSize
+        );
+    }
+}
+
+private void drawGrid() {
+    gc.setStroke(Color.rgb(128, 128, 255, 0.2));
+    gc.setLineWidth(1);
+    double gridSize = 50 * scale;
+    
+    for (double x = 0; x < WIDTH; x += gridSize) {
+        gc.strokeLine(x, 0, x, HEIGHT);
+    }
+    for (double y = 0; y < HEIGHT; y += gridSize) {
+        gc.strokeLine(0, y, WIDTH, y);
+    }
+}
 
     private boolean shouldDrawConnection(SystemData systemA, SystemData systemB) {
         // Always draw connections between visited systems
@@ -734,8 +924,8 @@ public class GalaxyMap {
 
     //debug mode
 
-    private int debugChunksSpawned = 0;
-    private int debugSpawnAmount = 100; // Total chunks to spawn
+    private int debugChunksSpawned = 50;
+    private int debugSpawnAmount = 50; //260; // Total chunks to spawn
     private int spawnEachTickAmount = 2; // How many to spawn per tick
     private int x = 0, y = 0;
     private int dx = 1, dy = 0;
