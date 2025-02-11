@@ -63,8 +63,8 @@ public class GalaxyMap {
     private double viewX = 0;
     private double viewY = 0;
     private double scale = 1.0;
-    private double minScale = 0.1; //0.5
-    private double maxScale = 10.0; //5
+    private double minScale = 0.07; //0.5
+    private double maxScale = 2.0; //5
     private double lastMouseX;
     private double lastMouseY;
     private boolean isPanning = false;
@@ -79,7 +79,7 @@ public class GalaxyMap {
 
 
 
-    private static final double CHUNK_SIZE = 10.0;
+    private static final double CHUNK_SIZE = 90.0;
 
 
 
@@ -108,9 +108,9 @@ public class GalaxyMap {
     //debug mode
 
     private int debugChunksSpawned = 0;
-    private int debugSpawnAmount = 5000; //260; // Total chunks to spawn  goal 2500 chunks. 10000 starsystems
+    private int debugSpawnAmount = 50000; //260; // Total chunks to spawn  goal 2500 chunks. 10000 starsystems
 
-    private int spawnEachTickAmount = 10; // How many to spawn per tick
+    private int spawnEachTickAmount = 200; // How many to spawn per tick
     private int x = 0, y = 0;
     private int dx = 1, dy = 0;
     private int stepSize = 1;
@@ -121,6 +121,18 @@ public class GalaxyMap {
     private long lastTickTime = System.nanoTime();
     private final long MAX_TICK_TIME_NS = 4_000_000_000L; // 5000ms (5 seconds) in nanoseconds
     private int densityFactor = 1;
+    //private static final double B = 0.2;  // Growth rate of spiral
+   // private static final double Z = 0.3;  // Initial radius (reduced for tighter center)
+   // private static final double ARM_WIDTH = CHUNK_SIZE * 0.6;  // Width of spiral arms
+   // private  final double B = 0.25; // Spiral 1 coefficient
+   // private  final double Z = 0.3;  // Spiral 1 initial radius. defualt rad 5
+
+    private  final double C = -1.0; // Spiral 2 initial radius df rad -5
+    private  final double V = 0.25; // Spiral 2 coefficient
+    private static final double B = 0.2;  // Keep original growth rate
+    private static final double Z = 0.015;  // Even smaller initial radius og 0.15
+    private static  double ARM_WIDTH = CHUNK_SIZE * 0.04;  // Slightly thicker than original
+
 
 
 
@@ -204,7 +216,7 @@ public class GalaxyMap {
         Set<Integer> allStarSystemsSet = chunks.getOrDefault(chunk, Collections.emptySet());
 
 
-        System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
+        //System.out.println("Star systems in chunk " + chunk + ": " + chunks.getOrDefault(chunk, Collections.emptySet()));
 
         List<Integer> allStarSystems = new ArrayList<>(allStarSystemsSet);
         //assign gates
@@ -326,14 +338,11 @@ public class GalaxyMap {
             assignGates(left.id, targetSys);
 
 
-            System.out.println("teststerte3");
             // now give gate to target going to left.id
             //origin = new ArrayList<>(List.of(allStarSystems.get(left.id)));
             origin = new ArrayList<>(List.of(left.id));
 
-            System.out.println("teststerte");
             assignGates(targetSys.get(0), origin);
-            System.out.println("teststerte2");
 
 
             //find right neighbor connection
@@ -511,10 +520,7 @@ public class GalaxyMap {
     }
 */
 
-    private  final double B = 0.25; // Spiral 1 coefficient
-    private  final double Z = 1.0;  // Spiral 1 initial radius. defualt rad 5
-    private  final double C = -1.0; // Spiral 2 initial radius df rad -5
-    private  final double V = 0.25; // Spiral 2 coefficient
+
     /*
 
     public Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
@@ -560,6 +566,7 @@ public class GalaxyMap {
     }
 
      */
+    /*
     public Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
         Deque<Point2D.Double> coords = new ArrayDeque<>();
         if (ssCount == 0) return coords;
@@ -616,9 +623,9 @@ public class GalaxyMap {
                 Math.abs(r - Math.abs(r2)) < armWidth;
     }
 
-    /**
-     * Determines how many star systems should be in a chunk based on spiral coverage
-     */
+
+     //Determines how many star systems should be in a chunk based on spiral coverage
+
     public int determineSSCount(Point chunkCoord) {
 
         // For center region
@@ -646,6 +653,133 @@ public class GalaxyMap {
         if (coverageRatio < 0.1) return 0;
         return (int)(coverageRatio * densityFactor);
     }
+
+     */
+
+
+    ///////AAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+
+
+    public Deque<Point2D.Double> determineStarSystemCoords(int ssCount, Point chunk) {
+        Deque<Point2D.Double> coords = new ArrayDeque<>();
+        if (ssCount == 0) return coords;
+
+        double chunkBaseX = chunk.x * CHUNK_SIZE;
+        double chunkBaseY = chunk.y * CHUNK_SIZE;
+        double distFromCenter = Math.sqrt(chunk.x * chunk.x + chunk.y * chunk.y);
+
+        // For center region chunks
+        if (distFromCenter <= 5) {
+            for (int i = 0; i < ssCount; i++) {
+                coords.add(new Point2D.Double(
+                        chunkBaseX + (random.nextDouble() - 0.5) * CHUNK_SIZE,
+                        chunkBaseY + (random.nextDouble() - 0.5) * CHUNK_SIZE
+                ));
+            }
+            return coords;
+        }
+
+        // For spiral arm chunks
+        int attempts = 0;
+        while (coords.size() < ssCount && attempts < ssCount * 10) {
+            double x = chunkBaseX + random.nextDouble() * CHUNK_SIZE;
+            double y = chunkBaseY + random.nextDouble() * CHUNK_SIZE;
+
+            if (isInSpiral(x / CHUNK_SIZE, y / CHUNK_SIZE)) {
+                coords.add(new Point2D.Double(x, y));
+            }
+            attempts++;
+        }
+
+        return coords;
+    }
+
+
+    private boolean isInSpiral(double x, double y) {
+        // Convert to polar coordinates
+        double r = Math.sqrt(x * x + y * y);
+        double theta = Math.atan2(y, x);
+
+        // Normalize theta to positive values
+        if (theta < 0) {
+            theta += 2 * Math.PI;
+        }
+
+        // Calculate which revolution the point might be in
+        double revolutions = Math.log(r / Z) / (B * 2 * Math.PI);
+        int baseRevolution = (int) Math.floor(revolutions);
+
+        // Check the nearest 3 possible revolutions for both arms
+        for (int i = baseRevolution - 1; i <= baseRevolution + 1; i++) {
+            // First arm
+            double expectedTheta1 = theta + (2 * Math.PI * i);
+            double expectedR1 = Z * Math.exp(B * expectedTheta1);
+
+            // Second arm (offset by PI radians)
+            double expectedTheta2 = expectedTheta1 + Math.PI;
+            double expectedR2 = Z * Math.exp(B * expectedTheta2);
+
+
+            //make arm width thicker in center thinner further from center
+            //up 0.01 for every 300
+            double centerX = 400;
+            double centerY = 225;
+            double distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+            int distanceThreshold = 300;
+            int armWidthDecrements = (int) (distance / distanceThreshold);
+
+            //ARM_WIDTH -= armWidthDecrements * 0.01;
+            if(distance > 300){
+                //ARM_WIDTH = 0.02;
+                ARM_WIDTH -= armWidthDecrements * 0.0000001;
+            }
+
+
+
+            // If the point is within ARM_WIDTH of either spiral arm, it's valid
+            if (Math.abs(r - expectedR1) < ARM_WIDTH ||
+                    Math.abs(r - expectedR2) < ARM_WIDTH) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public int determineSSCount(Point chunkCoord) {
+        double distFromCenter = Math.sqrt(chunkCoord.x * chunkCoord.x + chunkCoord.y * chunkCoord.y);
+        if (distFromCenter <= 2) {  // Reduced from 5 to 2 for much smaller center
+            return (int)(densityFactor * 1.5);
+        }
+
+        int coverage = 0;
+        int samplePoints = 100;
+        for (int i = 0; i < samplePoints; i++) {
+            double x = chunkCoord.x + (random.nextDouble() - 0.8);
+            double y = chunkCoord.y + (random.nextDouble() - 0.8);
+
+            if (isInSpiral(x, y)) {
+                coverage++;
+            }
+        }
+
+        double coverageRatio = coverage / (double) samplePoints;
+        if (coverageRatio < 0.05) return 0;
+
+        return Math.max(1, (int)(coverageRatio * densityFactor));
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -681,7 +815,7 @@ public class GalaxyMap {
                     //double y = random.nextDouble(20, 300);
                     StarSystem target = StarSystemCache.getInstance().get(ssID);
                     String generalArea = getSystemChunkPosition(ssID,getSystemChunk(ssID) );
-                    System.out.println("gate "+ssID+" is near "+generalArea);
+                    //System.out.println("gate "+ssID+" is near "+generalArea);
                     javafx.geometry.Point2D coords = target.getValidGateSpawn(generalArea);
                     target.addGate(new Gate(direction, targetSystem, coords.getX(), coords.getY(), ssID));
                     systemData.get(ssID).addConnection(targetSystem);
@@ -714,8 +848,8 @@ public class GalaxyMap {
 
         // Determine horizontal position
         String horizontal;
-        System.out.println("System " + ssID + " relative position: " + relX + ", " + relY);
-System.out.println("Thirds size: " + thirdSize);
+        //System.out.println("System " + ssID + " relative position: " + relX + ", " + relY);
+        //System.out.println("Thirds size: " + thirdSize);
         if (relX < thirdSize) {
             horizontal = "L";
         } else if (relX < 2 * thirdSize) {
@@ -740,7 +874,7 @@ System.out.println("Thirds size: " + thirdSize);
         }
 
         String position = vertical + horizontal;
-        System.out.println("Calculated position: " + position + " for system " + ssID + " in chunk " + chunkLoc);
+       // System.out.println("Calculated position: " + position + " for system " + ssID + " in chunk " + chunkLoc);
         return position;
     }
 
@@ -802,7 +936,7 @@ System.out.println("Thirds size: " + thirdSize);
         }
         currentChunk = getSystemChunk(currentSystem);
 
-        testPrint();
+        //testPrint();
 
     }
     
@@ -835,21 +969,12 @@ System.out.println("Thirds size: " + thirdSize);
         debugMode = false;
 
 
-        /*
-        isOpen = false;
-        debugDrawMode = false;  // Disable debug drawing mode
-        if (expansionTimeline != null) {
-            expansionTimeline.stop();
-        }
-        isDebugExpanding = false;
-
-         */
     }
 
 
 
 
-
+    private int dc = 0;
     //draw
     private void draw() {
     // Draw grid background
@@ -926,15 +1051,26 @@ System.out.println("Thirds size: " + thirdSize);
             system.screenY - dotSize
         );
 
+
+
         if(debugMode){
             Deque<Point2D.Double> coords = new ArrayDeque<>();
             try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
                 String line;
+                gc.setFill(Color.WHITE);
                 while ((line = reader.readLine()) != null) {
                     String[] parts = line.split(" ");
                     double x = Double.parseDouble(parts[0]);
                     double y = Double.parseDouble(parts[1]);
-                    coords.add(new Point2D.Double(x, y));
+                    gc.fillOval(
+                            (x - viewX) * scale + (WIDTH / 2.0)-dotSize/2,
+                            (y - viewY) * scale + (HEIGHT / 2.0)-dotSize/2,
+                            dotSize,
+                            dotSize
+                    );
+                    //System.out.println("drew "+dc);
+                    dc++;
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -942,17 +1078,8 @@ System.out.println("Thirds size: " + thirdSize);
 
 
             //gc.setFill(Color.rgb(128, 0, 255));
-            gc.setFill(Color.WHITE);
-            for (Point2D.Double point : coords) {
+            //gc.setFill(Color.WHITE);
 
-                gc.fillOval(
-                        (point.x - viewX) * scale + (WIDTH / 2.0)-dotSize/2,
-                        (point.y - viewY) * scale + (HEIGHT / 2.0)-dotSize/2,
-                        dotSize,
-                        dotSize
-                );
-                //System.out.println(point.x + ", " + point.y);
-            }
         }
     }
 }
@@ -1189,6 +1316,8 @@ private void drawGrid() {
     }
 
 
+    private int dsc = 0;
+    private int genc = 0;
     public void updateDebugSpawning() {
         if (!isSpawning) return; // Stop if spawning was disabled externally
 
@@ -1214,26 +1343,40 @@ private void drawGrid() {
         // Spawn chunks
         for (int i = 0; i < spawnLimit && debugChunksSpawned < debugSpawnAmount; i++) {
             //createChunk(x, y, true);
+            System.out.println("wrote "+dsc);
+            System.out.println("genc "+genc);
+            genc++;
+
             Point chunk = new Point(x,y);
             int count = determineSSCount(chunk);
+            System.out.println("SS Count for " + chunk + ": " + count);
+
             Deque<Point2D.Double> coords = determineStarSystemCoords(count, chunk);
             // write this to a file.
-
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) { // true enables append mode
                 for (Point2D.Double point : coords) {
                     writer.write(point.x + " " + point.y);
                     writer.newLine();
+                    dsc++;
+                    System.out.println("wrote "+dsc);
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                System.out.println("\n\n\nerror at\n\n\n\n"+dc);
             }
+
+
+
 
 
             x += dx;
             y += dy;
             stepsTaken++;
             debugChunksSpawned++;
+            //System.out.println("spawned chunks #:"+ debugChunksSpawned);
+
 
             if (stepsTaken == stepSize) {
                 stepsTaken = 0;

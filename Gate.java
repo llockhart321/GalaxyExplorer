@@ -363,7 +363,7 @@ public class Gate {
 
         // If collision detected, try alternative positions with increasing distances
         if (isColliding) {
-            System.out.println("Initial spawn position unsafe, trying alternatives");
+            //System.out.println("Initial spawn position unsafe, trying alternatives");
             double[] distances = {150, 200, 250}; // Try increasingly larger distances
             
             for (double distance : distances) {
@@ -382,20 +382,20 @@ public class Gate {
                 }
 
                 if (!isColliding) {
-                    System.out.println("Found safe position at distance: " + distance);
+                    //System.out.println("Found safe position at distance: " + distance);
                     break;
                 }
             }
 
             // If still no safe spot found, use a fallback position
             if (isColliding) {
-                System.out.println("No safe position found, using fallback");
+                //System.out.println("No safe position found, using fallback");
                 player.setX(800);
                 player.setY(800);
             }
         }
     } else {
-        System.out.println("No matching gate found in new system");
+        //System.out.println("No matching gate found in new system");
         player.setX(800);
         player.setY(800);
     }
