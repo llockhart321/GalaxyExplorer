@@ -77,7 +77,7 @@ public class Camera {
       gc.setStroke(Color.RED);
       int width = RIGHT_BOUND - LEFT_BOUND;
       int height = DOWN_BOUND - UP_BOUND;
-      gc.strokeRect(LEFT_BOUND, UP_BOUND, width, height);
+      //gc.strokeRect(LEFT_BOUND, UP_BOUND, width, height);
    }
 
    private double clamp(double value, double min, double max) {
