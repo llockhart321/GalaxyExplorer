@@ -78,7 +78,7 @@ public class GalaxyMap {
 
 
 
-    private int CHUNK_SIZE = 100;
+    private static final double CHUNK_SIZE = 1000.0;
 
 
 
@@ -623,6 +623,8 @@ public class GalaxyMap {
 
         // Determine horizontal position
         String horizontal;
+        System.out.println("System " + ssID + " relative position: " + relX + ", " + relY);
+System.out.println("Thirds size: " + thirdSize);
         if (relX < thirdSize) {
             horizontal = "L";
         } else if (relX < 2 * thirdSize) {
@@ -1030,6 +1032,8 @@ private void drawGrid() {
 
     private int debugChunksSpawned = 0;
     private int debugSpawnAmount = 100; //260; // Total chunks to spawn  goal 2500 chunks. 10000 starsystems
+
+
     private int spawnEachTickAmount = 2; // How many to spawn per tick
     private int x = 0, y = 0;
     private int dx = 1, dy = 0;

@@ -191,7 +191,7 @@ public class Gate {
    
 
    
-    public void activate(GraphicsContext gc) {
+    /*public void activate(GraphicsContext gc) {
         StarSystem newSys;
         int oldSys = this.system;  // Store the original system
 
@@ -314,7 +314,95 @@ public class Gate {
 
         // Set the system after positioning the player
         player.setSystem(newSys);
+    }*/
+    
+    public void activate(GraphicsContext gc) {
+    StarSystem newSys;
+    int oldSys = this.system;
+
+    // Get the new system from cache
+    newSys = StarSystemCache.getInstance().get(targetSystem);
+    Player player = Player.getInstance();
+
+    // Find the corresponding gate in the new system
+    Gate destinationGate = null;
+    List<Gate> systemGates = newSys.getGates();
+
+    for (Gate gate : systemGates) {
+        if (gate.targetSystem == oldSys) {
+            destinationGate = gate;
+            break;
+        }
     }
+
+    if (destinationGate != null) {
+        // Calculate spawn position in front of the destination gate
+        double spawnOffsetDistance = 100; // Increased distance to prevent immediate re-triggering
+        double spawnX = destinationGate.x;
+        double spawnY = destinationGate.y;
+
+        // Convert rotation to radians for precise positioning
+        double angleInRadians = Math.toRadians(destinationGate.direction);
+        
+        // Calculate offset using trigonometry for more precise positioning
+        spawnX += spawnOffsetDistance * Math.cos(angleInRadians);
+        spawnY += spawnOffsetDistance * Math.sin(angleInRadians);
+
+        // Set initial player position
+        player.setX(spawnX);
+        player.setY(spawnY);
+
+        // Check if spawn position is safe
+        boolean isColliding = false;
+        for (Planet planet : newSys.getPlanets()) {
+            if (planet.isCollidingWith(player)) {
+                isColliding = true;
+                break;
+            }
+        }
+
+        // If collision detected, try alternative positions with increasing distances
+        if (isColliding) {
+            System.out.println("Initial spawn position unsafe, trying alternatives");
+            double[] distances = {150, 200, 250}; // Try increasingly larger distances
+            
+            for (double distance : distances) {
+                spawnX = destinationGate.x + (distance * Math.cos(angleInRadians));
+                spawnY = destinationGate.y + (distance * Math.sin(angleInRadians));
+                
+                player.setX(spawnX);
+                player.setY(spawnY);
+
+                isColliding = false;
+                for (Planet planet : newSys.getPlanets()) {
+                    if (planet.isCollidingWith(player)) {
+                        isColliding = true;
+                        break;
+                    }
+                }
+
+                if (!isColliding) {
+                    System.out.println("Found safe position at distance: " + distance);
+                    break;
+                }
+            }
+
+            // If still no safe spot found, use a fallback position
+            if (isColliding) {
+                System.out.println("No safe position found, using fallback");
+                player.setX(800);
+                player.setY(800);
+            }
+        }
+    } else {
+        System.out.println("No matching gate found in new system");
+        player.setX(800);
+        player.setY(800);
+    }
+
+    // Set the system after positioning the player
+    player.setSystem(newSys);
+}
 
     public int getTargetSystem(){
         return targetSystem;

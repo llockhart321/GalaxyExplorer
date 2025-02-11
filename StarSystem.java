@@ -200,10 +200,16 @@ public class StarSystem {
         return null;
     }
 
-    private boolean isOverlappingSun(Point2D point) {
+    /*private boolean isOverlappingSun(Point2D point) {
         double distanceToSun = point.distance(Sun.WORLD_CENTER_X, Sun.WORLD_CENTER_Y);
         return distanceToSun < sun.getRadius();
-    }
+    }*/
+    
+    private boolean isOverlappingSun(Point2D point) {
+       double distanceToSun = point.distance(Sun.WORLD_CENTER_X, Sun.WORLD_CENTER_Y);
+       // Increase this multiplier to push gates further from the sun
+       return distanceToSun < sun.getRadius() * 3; // Use 3x or higher radius as safety margin
+   }
 
     private boolean isOverlappingPlanet(Point2D point) {
         for (Planet planet : planets) {
