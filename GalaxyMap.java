@@ -1000,7 +1000,7 @@ public class GalaxyMap {
         }
     }
 
-    public void closeMap() {
+    private void closeMap() {
         isOpen = false;
         isSpawning = false;
         debugMode = false;

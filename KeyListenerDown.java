@@ -23,11 +23,19 @@ public class KeyListenerDown implements EventHandler<KeyEvent> {
          // Display map
          Main.mapState();
          GalaxyMap.getInstance().mapAction();
-
-
       }
       if(event.getCode() == KeyCode.X){
          GalaxyMap.getInstance().debug();
       }
+      if(event.getCode() == KeyCode.N){
+         // Display mini map
+         if(!Main.getMapState()) {
+            //Main.mapState();
+            MiniMap.getInstance().mapAction();
+         }
+
+      }
+
+
    }
 }

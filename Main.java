@@ -55,6 +55,7 @@ public class Main extends Application {
       
       //get map ready
       GalaxyMap.getInstance().set(gc, ah);
+      MiniMap.getInstance().set(gc, ah);
       System.out.println("printing all systems: "+StarSystemCache.getInstance().getAllSystems());
       System.out.println("system 1: "+StarSystemCache.getInstance().get(0));
       //StarSystemCache.getInstance().getAllSystems();
@@ -75,4 +76,8 @@ public class Main extends Application {
    public static void mapState(){
       isMapOpen = !isMapOpen;
    }
+   public static boolean getMapState(){
+      return isMapOpen;
+   }
+
 }
