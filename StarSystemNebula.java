@@ -41,25 +41,30 @@ public class StarSystemNebula {
    }
    
    public void draw(GraphicsContext gc) {
-        // Draw simplified grid
-      if (offsetX % 40 == 0 && offsetY % 40 == 0) {
-         drawGrid(gc);
-      }
-        
-        // Draw nebula with larger steps
+    // Draw grid always, not conditionally
+      drawGrid(gc);
+    
+    // Draw nebula layers
       drawNoiseLayer(gc, noiseLayer1, 0.7, 1.0, retroColors[0]);
       drawNoiseLayer(gc, noiseLayer2, 1.0, 0.6, retroColors[1]);
    }
-    
+
    private void drawGrid(GraphicsContext gc) {
       gc.setStroke(Color.rgb(255, 255, 255, 0.15));
       gc.setLineWidth(1);
-      double step = 80; // Increased grid size
-        
-      for (double x = 0; x < gc.getCanvas().getWidth(); x += step) {
+      double step = 80;
+    
+    // Calculate grid offset based on player position
+      double offsetX = wrapValue(this.offsetX, step);
+      double offsetY = wrapValue(this.offsetY, step);
+    
+    // Draw vertical lines
+      for (double x = -offsetX; x < gc.getCanvas().getWidth(); x += step) {
          gc.strokeLine(x, 0, x, gc.getCanvas().getHeight());
       }
-      for (double y = 0; y < gc.getCanvas().getHeight(); y += step) {
+    
+    // Draw horizontal lines
+      for (double y = -offsetY; y < gc.getCanvas().getHeight(); y += step) {
          gc.strokeLine(0, y, gc.getCanvas().getWidth(), y);
       }
    }
